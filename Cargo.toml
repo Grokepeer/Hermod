@@ -1,0 +1,12 @@
+[package]
+name = "Hermod"
+version = "0.1.0"
+authors = ["Matteo Minardi <matteo.minardi2014@gmail.com"]
+rust-version = "1.66"
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "hermod"
+path = "src/main.rs"

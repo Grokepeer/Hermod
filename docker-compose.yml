@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  main:
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: grokepeer/hermod:latest
+    command: ""
+    ports:
+      - "8000:8000"
+    environment:
+      ENVRON: dev
