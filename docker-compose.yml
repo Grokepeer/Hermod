@@ -9,6 +9,3 @@ services:
     command: ""
     ports:
       - 2088:2088
-
-volumes:
-  db-ydb:
