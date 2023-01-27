@@ -1,8 +1,9 @@
 use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
-    thread
 };
+
+use Hermod::ThreadPool;
 
 fn main() {
     println!("[Hermod] Up and running...");
@@ -17,13 +18,15 @@ fn main() {
             handle_connection(stream);
         });
     }
+
+    println!("Shutting down.");
 }
 
 fn handle_connection(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
     let header = buf_reader.lines().next().unwrap().unwrap();
 
-    println!("Request: {:#?}", header);
+    // println!("Request: {:#?}", header);
 
     let (status, res_content) = match &header[..] {
         "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "Got it"),
