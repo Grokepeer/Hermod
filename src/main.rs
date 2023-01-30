@@ -1,11 +1,11 @@
 use std::{
-    io::{prelude::*, BufReader},
+    io::{prelude::*},
     net::{TcpListener, TcpStream},
 };
 
 use Hermod::llb::{
     tmodule::ThreadPool,
-    jmodule as Json,
+    jmodule::Json,
 };
 
 fn main() {
@@ -38,7 +38,8 @@ fn handle_connection(mut stream: TcpStream) {
     .lines()
     .collect();
 
-    println!("Result of JSON.read() {}", Json::read("yes")); // TODO Json::read()
+    let test = Json::from("Gotcha");
+    println!("Result of JSON.read(): {}", test.find("id"));
 
     println!("{:?}", req);
     
