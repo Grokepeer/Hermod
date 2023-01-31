@@ -8,12 +8,13 @@ Hermod is an In-Memory database system that was designed for YBD. It uses a cust
 
 HTTP request formatting to Hermod is at minimum as follows:  
 ```
-    "GET / HTTP/1.1",
-    "Content-Length: *"
+GET / HTTP/1.1
+Content-Length: length
 
-    {
-        "sid": ******
-    }
+{
+    "sid": "******",
+    "token": "******"
+}
 ```
 
 ### ANN details
