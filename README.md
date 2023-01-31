@@ -12,10 +12,14 @@ GET / HTTP/1.1
 Content-Length: length
 
 {
-    "sid": "******",
+    "key": "******",
     "token": "******"
 }
 ```
+The request path will have to be changed based on the requested operation:  
+- /get to get all informations related to the key given
+- /set to set a new record given the key
+- /del to delete a record given the key
 
 ### ANN details
 
