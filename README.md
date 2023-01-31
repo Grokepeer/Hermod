@@ -23,8 +23,8 @@ The request path will have to be changed based on the requested operation:
 
 ### ANN details
 
-...
+In development
 
 ### Memory Leak Protection
 
-...
+In development
