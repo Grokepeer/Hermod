@@ -36,7 +36,15 @@ impl ThreadPool {
     {
         let job = Box::new(f);
 
-        self.sender.as_ref().unwrap().send(job).unwrap();
+        match self.sender.as_ref() {
+            Some(refer) => {
+                match refer.send(job) {
+                    Ok(send) => println!("Done"),
+                    Err(e) => println!("Err")
+                }
+            },
+            None => println!("err")
+        }
     }
 }
 
@@ -62,20 +70,27 @@ struct Worker {
 impl Worker {
     fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {
-            let message = receiver.lock().unwrap().recv();
+            match receiver.lock() {
+                Ok(msg) => { 
+                    let message = msg.recv();
 
-            match message {
-                Ok(job) => {
-                    println!("Worker {id} got a job; executing.");
-
-                    job();
+                    match message {
+                        Ok(job) => {
+                            println!("Worker {id} got a job; executing.");
+        
+                            job();
+                        }
+                        Err(_) => {
+                            println!("Worker {id} disconnected; shutting down.");
+        
+                            break;
+                        }
+                    }
+                },
+                Err(e) => { 
+                    //Nothing
                 }
-                Err(_) => {
-                    println!("Worker {id} disconnected; shutting down.");
-
-                    break;
-                }
-            }
+            };
         });
 
         Worker { 
