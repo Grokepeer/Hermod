@@ -14,7 +14,7 @@ fn main() {
     println!("[Hermod] Up and running...");
 
     let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
-    let pool = ThreadPool::new(10);
+    let pool = ThreadPool::new(4);
 
     for stream in listener.incoming() {
         match stream {
