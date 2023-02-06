@@ -1,19 +1,22 @@
 use std::{
     thread,
-    sync::{mpsc, Arc, Mutex}
+    sync::{mpsc, Arc, Mutex, RwLock}
 };
 
-pub struct KeyData<'a> {
+pub struct KeyData {
     pub key: String,
-    pub pair: &'a str
+    pub pair: String,
 }
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: Option<mpsc::Sender<Job>>,
+    sender: Option<mpsc::Sender<JobPacket>>,
 }
 
-type Job = Box<dyn FnOnce() + Send + 'static>;
+pub struct JobPacket {
+    job: Box<dyn FnOnce() + Send + 'static>,
+    store: Arc<RwLock<Vec<KeyData>>>,
+}
 
 impl ThreadPool {
     pub fn new(size: usize) -> ThreadPool {
@@ -35,21 +38,59 @@ impl ThreadPool {
         }
     }
 
-    pub fn execute<F>(&self, f: F, store: &Vec<KeyData>)
+    pub fn execute<F>(&self, f: F, kstore: Arc<RwLock<Vec<KeyData>>>)
     where
         F: FnOnce() + Send + 'static,
     {
-        println!("{}", store[0].key);
-        let job = Box::new(f);
+        let jobpacket = { JobPacket {
+            job: Box::new(f),
+            store: kstore,
+        }};
 
         match self.sender.as_ref() {
             Some(refer) => {
-                match refer.send(job) {
-                    Ok(send) => println!("Done"),
-                    Err(e) => println!("Err")
+                match refer.send(jobpacket) {
+                    Ok(_) => println!("Done"),
+                    Err(_) => println!("Err")
                 }
             },
             None => println!("err")
+        }
+    }
+}
+
+struct Worker {
+    id: usize,
+    thread: Option<thread::JoinHandle<()>>,
+}
+
+impl Worker {
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<JobPacket>>>) -> Worker {
+        let thread = thread::spawn(move || loop {
+            match receiver.lock() {
+                Ok(jp) => { 
+                    let packet = jp.recv();
+                    let message = match packet {
+                        Ok(packet) => {
+                            packet
+                        }
+                        Err(_) => {
+                            continue
+                        }
+                    };
+
+                    println!("First Store entry: {}", message.store.read().unwrap()[0].key);
+                    (message.job)();
+                },
+                Err(_) => { 
+                    // println!("[Hermod] Thread {id} got a faulty JobPacket");
+                }
+            };
+        });
+
+        Worker { 
+            id, 
+            thread: Some(thread), 
         }
     }
 }
@@ -64,44 +105,6 @@ impl Drop for ThreadPool {
             if let Some(thread) = worker.thread.take() {
                 thread.join().unwrap();
             }
-        }
-    }
-}
-
-struct Worker {
-    id: usize,
-    thread: Option<thread::JoinHandle<()>>,
-}
-
-impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
-        let thread = thread::spawn(move || loop {
-            match receiver.lock() {
-                Ok(msg) => { 
-                    let message = msg.recv();
-
-                    match message {
-                        Ok(job) => {
-                            println!("Worker {id} got a job; executing.");
-        
-                            job();
-                        }
-                        Err(_) => {
-                            println!("Worker {id} disconnected; shutting down.");
-        
-                            break;
-                        }
-                    }
-                },
-                Err(e) => { 
-                    //Nothing
-                }
-            };
-        });
-
-        Worker { 
-            id, 
-            thread: Some(thread), 
         }
     }
 }

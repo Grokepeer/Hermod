@@ -1,8 +1,15 @@
+// YBD Front-End Node.js APP
+// Copyright(c) 2022-2023 Matteo Minardi <contact@ybdrink.com>
+// AGPL Licensed
+
+//Importing standard libraries
 use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
+    sync::{Arc, RwLock}
 };
 
+//Importing libraries structs and functions
 use Hermod::llb::{
     tmodule::ThreadPool,
     tmodule::KeyData
@@ -17,21 +24,21 @@ fn main() {
     let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     let pool = ThreadPool::new(4);
 
-    let mut keys: Vec<KeyData> = Vec::new();
-    let mut data = String::from("JsonStringify-ed:DataContent");
-    keys.push({ KeyData {
-        key: String::from("AlphanumericalKey"),
-        pair: &mut data
-    }});
+    //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
+    let store = Arc::new(RwLock::new(Vec::new()));
 
-    println!("{:?}", keys[0].pair);
+    //Initializing the store vector, if the vector is not initialized mpsc channels locks will panick at empty content
+    store.write().expect("[Hermod] An error occured when allocating memory to the main KeysVector").push({ KeyData {
+        key: String::from("_base"),
+        pair: String::from("_base"),
+    }});
 
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                pool.execute(|| { handle_connection(stream); }, &keys);
+                pool.execute(|| { handle_connection(stream); }, Arc::clone(&store));
             }
-            Err(e) => {
+            Err(_) => {
                 println!("[Hermod] Stream error when accepting connection.")
             }
         }
