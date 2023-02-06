@@ -22,7 +22,9 @@ fn main() {
     println!("[Hermod] Up and running...");
 
     let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
-    let pool = ThreadPool::new(4);
+    
+    let W = 4;
+    let pool = ThreadPool::new(W);  //New ThreadPool requested with worker count N
 
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store = Arc::new(RwLock::new(Vec::new()));
@@ -36,7 +38,7 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                pool.execute(|| { handle_connection(stream); }, Arc::clone(&store));
+                pool.execute(|| { handle_connection(stream); }, Arc::clone(&store));    //Sends the job off to the ThreadPool
             }
             Err(_) => {
                 println!("[Hermod] Stream error when accepting connection.")
