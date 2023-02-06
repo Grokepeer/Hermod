@@ -4,6 +4,8 @@
 
 //Importing standard libraries
 use std::{
+    thread,
+    time,
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
     sync::{Arc, RwLock, Mutex}
@@ -21,7 +23,7 @@ use serde::de::Deserialize;
 fn main() {
     let W = 4;  //HTTP server thread count
     println!("[Hermod] Up and running...");
-    println!("[Hermod} Hermod settings:\n - Core Count:\t{W}\n - ANN Optimization:\t disabled");
+    println!("[Hermod] Hermod settings:\n - Core Count:\t{W}\n - ANN Optimization:\t disabled");
 
     let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     
@@ -39,7 +41,8 @@ fn main() {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                pool.execute(|| { handle(stream); }, Arc::clone(&store));    //Sends the job off to the ThreadPool
+                let store_clone = Arc::clone(&store);
+                pool.execute(|| { handle(stream, store_clone) });    //Sends the job off to the ThreadPool
             }
             Err(_) => {
                 println!("[Hermod] Stream error when accepting connection.")
@@ -50,10 +53,18 @@ fn main() {
     println!("[Hermod] Shutting down.");
 }
 
-fn handle(mut stream: TcpStream) {
+fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
     //Saves in a buffer the request from the TCPStream buffer and then saves its line in a vector names req.
     let mut buffer = [0; 500];
     let rawreq = stream.read(&mut buffer).unwrap();
+
+    // thread::sleep(time::Duration::from_millis(4000));
+    
+    println!("Store first value: {}", store.read().unwrap()[0].pair.lock().unwrap());
+    store.write().unwrap().push({ KeyData {
+        key: String::from("Bitch"),
+        pair: Mutex::new(String::from("Fuck all this informations... you get nothing"))
+    }});
 
     // let buffer = BufReader::new(&mut stream);
 

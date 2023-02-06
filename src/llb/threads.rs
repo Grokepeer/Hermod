@@ -1,7 +1,6 @@
 //Importing standard libraries
 use std::{
     thread,
-    time,
     sync::{mpsc, Arc, Mutex, RwLock}
 };
 
@@ -14,14 +13,11 @@ pub struct KeyData {
 //ThreadPool structure that is used by the HTTP Server to send request onto workers, also contains mpsc channel informations for the workers
 pub struct ThreadPool {
     workers: Vec<Worker>,
-    sender: Option<mpsc::Sender<JobPacket>>,
+    sender: Option<mpsc::Sender<Job>>,
 }
 
-//The JobPacket struct is used to send all usefull data to the Worker
-pub struct JobPacket {
-    job: Box<dyn FnOnce() + Send + 'static>,
-    store: Arc<RwLock<Vec<KeyData>>>,
-}
+//The Job type is used to send the necessary functions to the workers
+type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl ThreadPool {
     pub fn new(size: usize) -> ThreadPool {
@@ -43,18 +39,13 @@ impl ThreadPool {
         }
     }
 
-    pub fn execute<F>(&self, f: F, kstore: Arc<RwLock<Vec<KeyData>>>)
+    pub fn execute<F>(&self, f: F)
     where
         F: FnOnce() + Send + 'static,
     {
-        let jobpacket = { JobPacket {   //Builds the JobPacket with all the infos to send to the worker
-            job: Box::new(f),
-            store: kstore,
-        }};
-
-        match self.sender.as_ref() {    //Gets the mpsc channel to send the job request with the JobPacket to workers pool
+        match self.sender.as_ref() {    //Gets the mpsc channel to send the job request to workers pool
             Some(refer) => {
-                match refer.send(jobpacket) {   //Send JobPacket to a worker
+                match refer.send(Box::new(f)) {   //Sends the boxed job function to a worker
                     Ok(_) => println!("[Hermod] Job sent to worker"),
                     Err(_) => println!("[Hermod] The job couldn't be sent to the worker pool")
                 }
@@ -71,7 +62,7 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<JobPacket>>>) -> Worker {
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {   //Create a Thread for the worker to work in
             match receiver.lock() { //Gets the lock onto the receiver channel to read from it
                 Ok(receiver_lock) => { 
@@ -83,13 +74,10 @@ impl Worker {
                             continue    //If the packet is invalid it skips the loop
                         }
                     };
-                    
-                    //Drop the lock on the receiver so other thread can lock onto it
-                    drop(receiver_lock);
+                    drop(receiver_lock);    //Drop the lock on the receiver so other thread can lock onto it
 
-                    thread::sleep(time::Duration::from_millis(2000));
-                    println!("[Hermod] Thread: {id}, \n First Store entry:\n {}\n {}", packet.store.read().unwrap()[0].key, packet.store.read().unwrap()[0].pair.lock().unwrap());
-                    (packet.job)();    //Execute the request job
+                    println!("ID: {id}");
+                    packet();    //Execute the request job
                 },
                 Err(_) => { 
                     println!("[Hermod] Thread {id} couldn't get a lock on the receiver");
