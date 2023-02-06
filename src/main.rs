@@ -6,24 +6,25 @@
 use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
-    sync::{Arc, RwLock}
+    sync::{Arc, RwLock, Mutex}
 };
 
 //Importing libraries structs and functions
 use Hermod::llb::{
-    tmodule::ThreadPool,
-    tmodule::KeyData
+    threads::ThreadPool,
+    threads::KeyData
 };
 
 use http::Request;
 use serde::de::Deserialize;
 
 fn main() {
+    let W = 4;  //HTTP server thread count
     println!("[Hermod] Up and running...");
+    println!("[Hermod} Hermod settings:\n - Core Count:\t{W}\n - ANN Optimization:\t disabled");
 
     let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     
-    let W = 4;
     let pool = ThreadPool::new(W);  //New ThreadPool requested with worker count N
 
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
@@ -32,13 +33,13 @@ fn main() {
     //Initializing the store vector, if the vector is not initialized mpsc channels locks will panick at empty content
     store.write().expect("[Hermod] An error occured when allocating memory to the main KeysVector").push({ KeyData {
         key: String::from("_base"),
-        pair: String::from("_base"),
+        pair: Mutex::new(String::from("_base")),
     }});
 
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                pool.execute(|| { handle_connection(stream); }, Arc::clone(&store));    //Sends the job off to the ThreadPool
+                pool.execute(|| { handle(stream); }, Arc::clone(&store));    //Sends the job off to the ThreadPool
             }
             Err(_) => {
                 println!("[Hermod] Stream error when accepting connection.")
@@ -49,7 +50,7 @@ fn main() {
     println!("[Hermod] Shutting down.");
 }
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle(mut stream: TcpStream) {
     //Saves in a buffer the request from the TCPStream buffer and then saves its line in a vector names req.
     let mut buffer = [0; 500];
     let rawreq = stream.read(&mut buffer).unwrap();

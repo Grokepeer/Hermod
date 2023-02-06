@@ -1,6 +1,7 @@
 //Importing standard libraries
 use std::{
     thread,
+    time,
     sync::{mpsc, Arc, Mutex, RwLock}
 };
 
@@ -82,8 +83,12 @@ impl Worker {
                             continue    //If the packet is invalid it skips the loop
                         }
                     };
+                    
+                    //Drop the lock on the receiver so other thread can lock onto it
+                    drop(receiver_lock);
 
-                    println!("First Store entry: {}", packet.store.read().unwrap()[0].key);
+                    thread::sleep(time::Duration::from_millis(2000));
+                    println!("[Hermod] Thread: {id}, \n First Store entry:\n {}\n {}", packet.store.read().unwrap()[0].key, packet.store.read().unwrap()[0].pair.lock().unwrap());
                     (packet.job)();    //Execute the request job
                 },
                 Err(_) => { 
