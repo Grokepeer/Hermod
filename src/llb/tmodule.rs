@@ -3,6 +3,11 @@ use std::{
     sync::{mpsc, Arc, Mutex}
 };
 
+pub struct KeyData<'a> {
+    pub key: String,
+    pub pair: &'a str
+}
+
 pub struct ThreadPool {
     workers: Vec<Worker>,
     sender: Option<mpsc::Sender<Job>>,
@@ -30,10 +35,11 @@ impl ThreadPool {
         }
     }
 
-    pub fn execute<F>(&self, f: F)
+    pub fn execute<F>(&self, f: F, store: &Vec<KeyData>)
     where
         F: FnOnce() + Send + 'static,
     {
+        println!("{}", store[0].key);
         let job = Box::new(f);
 
         match self.sender.as_ref() {

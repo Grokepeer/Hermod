@@ -4,7 +4,8 @@ use std::{
 };
 
 use Hermod::llb::{
-    tmodule::ThreadPool
+    tmodule::ThreadPool,
+    tmodule::KeyData
 };
 
 use http::Request;
@@ -16,10 +17,19 @@ fn main() {
     let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     let pool = ThreadPool::new(4);
 
+    let mut keys: Vec<KeyData> = Vec::new();
+    let mut data = String::from("JsonStringify-ed:DataContent");
+    keys.push({ KeyData {
+        key: String::from("AlphanumericalKey"),
+        pair: &mut data
+    }});
+
+    println!("{:?}", keys[0].pair);
+
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
-                pool.execute(|| { handle_connection(stream); });
+                pool.execute(|| { handle_connection(stream); }, &keys);
             }
             Err(e) => {
                 println!("[Hermod] Stream error when accepting connection.")
