@@ -6,7 +6,8 @@
 use std::{
     thread,
     time,
-    io::{prelude::*, BufReader},
+    str,
+    io::{prelude::*},
     net::{TcpListener, TcpStream},
     sync::{Arc, RwLock, Mutex}
 };
@@ -16,9 +17,6 @@ use Hermod::llb::{
     threads::ThreadPool,
     threads::KeyData
 };
-
-use http::Request;
-use serde::de::Deserialize;
 
 fn main() {
     let W = 4;  //HTTP server thread count
@@ -54,50 +52,74 @@ fn main() {
 }
 
 fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
-    //Saves in a buffer the request from the TCPStream buffer and then saves its line in a vector names req.
-    let mut buffer = [0; 500];
-    let rawreq = stream.read(&mut buffer).unwrap();
+    let mut req: Vec<u8> = Vec::new();  //Vector containing the complete HTTP request (groups together all buffers)
+    let mut cl = 0; //Content-Length
+    let mut clcheck: bool = false; //Content-Length has-been-acquired check
+
+    let badreq = "HTTP/1.1 400 Bad Request\r\nBad Request";
+
+    loop {   //The handle reads data by buffers of 500 bytes, if the first doesn't contain the required headers it drops the request
+        println!("Loop");
+        let mut buffer = [0; 250];
+        match stream.read(&mut buffer) {    //Reads from the stream the first buffer of requests
+            Ok(n) => {
+                if !clcheck {    //If there's no Content-Length defined yet it will search for it in the buffer received
+                    println!("clcheck false");
+                    let reqlines: Vec<_> = match str::from_utf8(&buffer) {  //Casts the u8 slice received from the stream.read() to UTF8 string
+                        Ok(content) => { content.lines().collect() }    //If the casting goes well it slices the headers in lines to read each
+                        Err(_) => { 
+                            stream.write_all(badreq.as_bytes());
+                            return 
+                        }
+                    };
+                    
+                    for line in reqlines {  //Reads each line of the casted request
+                        if line.starts_with("Content-Length") { //Gets the Content-Length
+                            let tcl: Vec<&str> = line.split(":").collect();
+                            println!("Got content-length here");
+                            cl = match tcl[1].trim().parse() {  //Casts CT to u8, if it fails the content length is considered 0
+                                Ok(cl) => { 
+                                    clcheck = true;
+                                    cl 
+                                }
+                                Err(_) => { 
+                                    0 
+                                }
+                            };
+                        }
+                    }
+                }
+
+                req.extend_from_slice(&buffer); //Extends the vector containing the complete request
+                let reqslice: Vec<&str> = str::from_utf8(&req).unwrap().split("\r\n\r\n").collect();
+                let bodylen = match reqslice[1].len() {
+                    Ok(len) => { len }
+                    None => { 0 }
+                };
+                if bodylen >= cl {   //If the body (the request part after the double new line) len() is longer than the declared Content-Length it stops reading
+                    println!("Break");
+                    break
+                }
+            }
+            Err(_) => {
+                stream.write_all(badreq.as_bytes());
+                return
+            }
+        }
+    }
+
+    println!("Got content length {cl}");
+
+    println!("{:?}", str::from_utf8(&req).unwrap());
+    // println!("{:?}", req);
 
     // thread::sleep(time::Duration::from_millis(4000));
-    
+
     println!("Store first value: {}", store.read().unwrap()[0].pair.lock().unwrap());
     store.write().unwrap().push({ KeyData {
         key: String::from("Bitch"),
         pair: Mutex::new(String::from("Fuck all this informations... you get nothing"))
     }});
-
-    // let buffer = BufReader::new(&mut stream);
-
-    // let rawreq = String::from(buffer);
-    let req = rawreq;
-
-    // Collects all lines from the http request
-    // let reqlines: Vec<_> = req
-    // .lines()
-    // .collect();
-
-    println!("Result of JSON.read(): {}", req);
-
-    println!("{:?}", req);
-    
-    // Finds the request line with the Content-Length and saves it in the var size..
-    // let split: Vec<_> = req.split("\r\n\r\n").collect();
-
-    // println!("{:?}", split[1].replace("\0", ""));
-
-    // Matches the header of the http request
-    // let (status, res_content) = match reqlines[0] {
-    //     "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "Got it"),
-    //     "GET /sleep HTTP/1.1" => ("HTTP/1.1 200 OK", "Sleep"),
-    //     _ => ("HTTP/1.1 404 NOT FOUND", "404")
-    // };
-
-    let request = Request::builder()
-    .method("GET")
-    .uri("https://www.rust-lang.org/")
-    .header("X-Custom-Foo", "Bar")
-    .body(())
-    .unwrap();
     
     let (status, res_content) = ("HTTP/1.1 200 OK", "Got it");
     let length = res_content.len();

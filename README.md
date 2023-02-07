@@ -21,6 +21,8 @@ The request path will have to be changed based on the requested operation:
 - /set to set a new record given the key
 - /del to delete a record given the key
 
+*It is especially important that a Content-Length is provided within the first 500 bytes of the request, otherwise only the first 500 bytes of the request will be read
+
 ### ANN details
 
 In development

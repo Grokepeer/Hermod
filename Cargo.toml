@@ -12,5 +12,3 @@ name = "hermod"
 path = "src/main.rs"
 
 [dependencies]
-http = "^0.2.8"
-serde = "^1.0"
