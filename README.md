@@ -32,10 +32,10 @@ Invalid HTTP request behaviours:
 - If *Content-Length* is not provided within the first 500 bytes or if an invalid value is given (a character) the server will only read the first 500 bytes of the request
 - In case no body is provided *Data-Key* must be in the first 500 bytes of the request along with all required headers
 
-### ANN details
+## ANN details
 
 In development
 
-### Memory Leak Protection
+## Memory Leak Protection
 
 In development
