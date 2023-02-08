@@ -6,7 +6,7 @@ Hermod is an In-Memory database management system that was designed for YBD. It 
 
 ## HTTP Request Standard
 
-### HTTP request formatting to Hermod is, in general, as follows:  
+### HTTP request formatting:  
 ```
 GET / HTTP/1.1
 Content-Length: length
