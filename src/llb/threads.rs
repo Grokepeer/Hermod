@@ -76,7 +76,6 @@ impl Worker {
                     };
                     drop(receiver_lock);    //Drop the lock on the receiver so other thread can lock onto it
 
-                    println!("ID: {id}");
                     packet();    //Execute the request job
                 },
                 Err(_) => { 

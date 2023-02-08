@@ -52,31 +52,31 @@ fn main() {
 }
 
 fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
-    let mut req: Vec<u8> = Vec::new();  //Vector containing the complete HTTP request (groups together all buffers)
+    let mut req = String::from("");  //Vector containing the complete HTTP request (groups together all buffers)
     let mut cl = 0; //Content-Length
+    let mut key = String::from("");    //Data Key
+    let mut httpheader = String::from("");
+    let mut reqbody = String::from("");
     let mut clcheck: bool = false; //Content-Length has-been-acquired check
 
     let badreq = "HTTP/1.1 400 Bad Request\r\nBad Request";
 
     loop {   //The handle reads data by buffers of 500 bytes, if the first doesn't contain the required headers it drops the request
-        println!("Loop");
-        let mut buffer = [0; 250];
+        // println!("Loop");
+        let mut buffer = [0; 500];
         match stream.read(&mut buffer) {    //Reads from the stream the first buffer of requests
             Ok(n) => {
+                let reqstring = str::from_utf8(&buffer).unwrap();
+
                 if !clcheck {    //If there's no Content-Length defined yet it will search for it in the buffer received
-                    println!("clcheck false");
-                    let reqlines: Vec<_> = match str::from_utf8(&buffer) {  //Casts the u8 slice received from the stream.read() to UTF8 string
-                        Ok(content) => { content.lines().collect() }    //If the casting goes well it slices the headers in lines to read each
-                        Err(_) => { 
-                            stream.write_all(badreq.as_bytes());
-                            return 
-                        }
-                    };
+                    // println!("clcheck false");
+                    let reqlines: Vec<_> = reqstring.lines().collect(); //It slices the headers in lines to read each
+                    httpheader = String::from(reqlines[0]);
                     
                     for line in reqlines {  //Reads each line of the casted request
                         if line.starts_with("Content-Length") { //Gets the Content-Length
                             let tcl: Vec<&str> = line.split(":").collect();
-                            println!("Got content-length here");
+                            // println!("Got content-length here: {}", line);
                             cl = match tcl[1].trim().parse() {  //Casts CT to u8, if it fails the content length is considered 0
                                 Ok(cl) => { 
                                     clcheck = true;
@@ -87,17 +87,25 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
                                 }
                             };
                         }
+                        if line.starts_with("Data-Key") {
+                            let tcl: Vec<&str> = line.split(":").collect();
+                            key = String::from(tcl[1].trim());
+                            key = key.replace("\"", "");
+                        }
                     }
                 }
 
-                req.extend_from_slice(&buffer); //Extends the vector containing the complete request
-                let reqslice: Vec<&str> = str::from_utf8(&req).unwrap().split("\r\n\r\n").collect();
-                let bodylen = match reqslice[1].len() {
-                    Ok(len) => { len }
-                    None => { 0 }
-                };
+                req.push_str(reqstring); //Extends the vector containing the complete request
+
+                let mut bodylen = 0;
+                if req.contains("\r\n\r\n") {   //If the request has a body it starts to count the length
+                    let body: Vec<&str> = req.split("\r\n\r\n").collect();
+                    bodylen = body[1].len();
+                    reqbody = String::from(body[1]);
+                }
+                
                 if bodylen >= cl {   //If the body (the request part after the double new line) len() is longer than the declared Content-Length it stops reading
-                    println!("Break");
+                    // println!("Break");
                     break
                 }
             }
@@ -108,18 +116,33 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
         }
     }
 
-    println!("Got content length {cl}");
-
-    println!("{:?}", str::from_utf8(&req).unwrap());
-    // println!("{:?}", req);
+    println!("[Hermod] Received request: {:?}", req.trim_matches(char::from(0)));
 
     // thread::sleep(time::Duration::from_millis(4000));
 
-    println!("Store first value: {}", store.read().unwrap()[0].pair.lock().unwrap());
-    store.write().unwrap().push({ KeyData {
-        key: String::from("Bitch"),
-        pair: Mutex::new(String::from("Fuck all this informations... you get nothing"))
-    }});
+    match httpheader.as_str() {
+        "GET /get HTTP/1.1" => {
+            for keydata in store.read().unwrap().iter() {
+                if keydata.key.as_str() == key {
+                    println!("GET {:?}", keydata.pair.lock().unwrap());
+                }
+            }
+        }
+
+        "GET /set HTTP/1.1" => {
+            store.write().unwrap().push({ KeyData {
+                key: key,
+                pair: Mutex::new(String::from(reqbody.trim_matches(char::from(0))))
+            }})
+        }
+
+        "GET /del HTTP/1.1" => {
+            println!("Del")
+        }
+        _ => {
+            println!("Unrecognized request")
+        }
+    }
     
     let (status, res_content) = ("HTTP/1.1 200 OK", "Got it");
     let length = res_content.len();

@@ -10,10 +10,10 @@ HTTP request formatting to Hermod is at minimum as follows:
 ```
 GET / HTTP/1.1
 Content-Length: length
+Data-Key: key
 
 {
-    "key": "******",
-    "token": "******"
+    //Informations to store
 }
 ```
 The request path will have to be changed based on the requested operation:  
@@ -21,7 +21,15 @@ The request path will have to be changed based on the requested operation:
 - /set to set a new record given the key
 - /del to delete a record given the key
 
-*It is especially important that a Content-Length is provided within the first 500 bytes of the request, otherwise only the first 500 bytes of the request will be read
+Storage operation:  
+- The *Data-Key* is a unique alphanumerical identification for the each block of data stored in the DB
+- A generic /set request will take the key and body of the HTTP request and saved them paired to each other on the DB as Strings, no manipulation to the data is performed
+- A /set request won't override an already existent record with the same key unless a destruction token is given along with it (as Del-Key Header)
+- As for the overriding /set, the /del request requires the destruction token
+
+Invalid HTTP request behaviours:  
+- If *Content-Length* is not provided within the first 500 bytes or if an invalid value is given (a character) the server will only read the first 500 bytes of the request
+- In case no body is provided *Data-Key* must be in the first 500 bytes of the request along with all required headers
 
 ### ANN details
 
