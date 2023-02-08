@@ -4,8 +4,6 @@
 
 //Importing standard libraries
 use std::{
-    thread,
-    time,
     str,
     io::{prelude::*},
     net::{TcpListener, TcpStream},
@@ -65,7 +63,7 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
         // println!("Loop");
         let mut buffer = [0; 500];
         match stream.read(&mut buffer) {    //Reads from the stream the first buffer of requests
-            Ok(n) => {
+            Ok(_) => {
                 let reqstring = str::from_utf8(&buffer).unwrap();
 
                 if !clcheck {    //If there's no Content-Length defined yet it will search for it in the buffer received

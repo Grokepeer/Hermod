@@ -23,7 +23,7 @@ The request path will have to be changed based on the requested operation:
 
 Storage operation:  
 - The *Data-Key* is a unique alphanumerical identification for the each block of data stored in the DB
-- A generic /set request will take the key and body of the HTTP request and saved them paired to each other on the DB as Strings, no manipulation to the data is performed
+- A generic /set request will take the key and body of the HTTP request and save them paired to each other on the DB as Strings, no manipulation to the data is performed
 - A /set request won't override an already existent record with the same key unless a destruction token is given along with it (as Del-Key Header)
 - As for the overriding /set, the /del request requires the destruction token
 
