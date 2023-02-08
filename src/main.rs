@@ -4,6 +4,7 @@
 
 //Importing standard libraries
 use std::{
+    mem,
     str,
     io::{prelude::*},
     net::{TcpListener, TcpStream},
@@ -26,13 +27,13 @@ fn main() {
     let pool = ThreadPool::new(W);  //New ThreadPool requested with worker count N
 
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
-    let store = Arc::new(RwLock::new(Vec::new()));
+    let store: Arc<RwLock<Vec<Arc<KeyData>>>> = Arc::new(RwLock::new(Vec::new()));
 
     //Initializing the store vector, if the vector is not initialized mpsc channels locks will panick at empty content
-    store.write().expect("[Hermod] An error occured when allocating memory to the main KeysVector").push({ KeyData {
+    store.write().expect("[Hermod] An error occured when allocating memory to the main KeysVector").push(Arc::new({ KeyData {
         key: String::from("_base"),
         pair: Mutex::new(String::from("_base")),
-    }});
+    }}));
 
     for stream in listener.incoming() {
         match stream {
@@ -49,13 +50,16 @@ fn main() {
     println!("[Hermod] Shutting down.");
 }
 
-fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
+fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
     let mut req = String::from("");  //Vector containing the complete HTTP request (groups together all buffers)
     let mut cl = 0; //Content-Length
     let mut key = String::from("");    //Data Key
+    let mut deltoken = String::from("");  //Destruction token
     let mut httpheader = String::from("");
     let mut reqbody = String::from("");
     let mut clcheck: bool = false; //Content-Length has-been-acquired check
+
+    let dt = "deltoken";
 
     let badreq = "HTTP/1.1 400 Bad Request\r\nBad Request";
 
@@ -90,6 +94,11 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
                             key = String::from(tcl[1].trim());
                             key = key.replace("\"", "");
                         }
+                        if line.starts_with("Del-Token") {
+                            let tcl: Vec<&str> = line.split(":").collect();
+                            deltoken = String::from(tcl[1].trim());
+                            deltoken = deltoken.replace("\"", "");
+                        }
                     }
                 }
 
@@ -118,32 +127,92 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<KeyData>>>) {
 
     // thread::sleep(time::Duration::from_millis(4000));
 
-    match httpheader.as_str() {
+    let mut resbody = "";
+    let mut bodystring = String::from("");
+    let mut reshead = "";
+    (reshead, resbody) = match httpheader.as_str() {
         "GET /get HTTP/1.1" => {
-            for keydata in store.read().unwrap().iter() {
-                if keydata.key.as_str() == key {
-                    println!("GET {:?}", keydata.pair.lock().unwrap());
+            match find_key(&key, Arc::clone(&store)) {
+                Ok(res) => {
+                    bodystring = res.0.pair.lock().unwrap().to_string();
+                    ("200 OK", bodystring.as_str())
+                }
+                Err(e) => {
+                    ("404 ERROR", e)
                 }
             }
         }
 
         "GET /set HTTP/1.1" => {
-            store.write().unwrap().push({ KeyData {
-                key: key,
-                pair: Mutex::new(String::from(reqbody.trim_matches(char::from(0))))
-            }})
+            match find_key(&key, Arc::clone(&store)) {
+                Ok(res) => {
+                    if deltoken.as_str() == dt {
+                        *(res.0).pair.lock().unwrap() = String::from(reqbody.trim_matches(char::from(0)));
+                        ("200 OK", "Record updated successfully")
+                    } else {
+                        ("403 Forbidden", "Unauthorized request")
+                    }
+                }
+                Err(e) => {
+                    if e == "No key found" {
+                        store.write().unwrap().push(Arc::new({ KeyData {
+                            key: key,
+                            pair: Mutex::new(String::from(reqbody.trim_matches(char::from(0))))
+                        }}));
+                        ("200 OK", "Record created successfully")
+                    } else {
+                        ("500 ERROR", e)
+                    }
+                }
+            }
         }
 
         "GET /del HTTP/1.1" => {
-            println!("Del")
+            match find_key(&key, Arc::clone(&store)) {
+                Ok(res) => {
+                    if deltoken.as_str() == dt {
+                        store.write().unwrap().swap_remove(res.1);
+                        ("200 OK", "Record deleted")
+                    } else {
+                        ("403 Forbidden", "Unauthorized request")
+                    }
+                }
+                Err(e) => {
+                    if e == "No key found" {
+                        ("404 ERROR", "No record to be deleted")
+                    } else {
+                        ("500 ERROR", e)
+                    }
+                }
+            }
         }
         _ => {
-            println!("Unrecognized request")
+            println!("Unrecognized request");
+            ("400 Bad Request", "Unrecognized request")
         }
-    }
+    };
     
-    let (status, res_content) = ("HTTP/1.1 200 OK", "Got it");
+    let (status, res_content) = ("HTTP/1.1 ".to_owned() + reshead, resbody.to_string());
     let length = res_content.len();
     let response = format!("{status}\r\nContent-Length: {length}\r\n\r\n{res_content}");
     stream.write_all(response.as_bytes()).unwrap();
+}
+
+fn find_key(key: &str, store: Arc<RwLock<Vec<Arc<KeyData>>>>) -> Result<(Arc<KeyData>, usize), &'static str> {
+    let storerlock = match store.read() {
+        Ok(lock) => lock,
+        Err(_) => {
+            return Err("Couldn't get a store lock on");
+        }
+    };
+
+    let mut i: usize = 0;
+    for keydata in storerlock.iter() {
+        if keydata.key.as_str() == key {
+            return Ok((Arc::clone(&keydata), i));
+        }
+        i += 1;
+    }
+
+    Err("No key found")
 }
