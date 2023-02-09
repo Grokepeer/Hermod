@@ -16,7 +16,7 @@ Data-Key: key
 
 - *Key* (required) is the unique ID of the data present in the DB
 
-### GET responses:  
+GET responses:  
 - "200 OK"      data
 - "404 ERROR"   "No Key found"
 - "500 ERROR"   error
@@ -38,7 +38,7 @@ Del-Token: token
 - *Token* (optional) is an alphanumerical string that is set in the server settings.json file that allows overriding of existent data
 - *Data* (required) will be saved in the DB paired with the key. Can be a string, a word, JSON, XML, anything.
 
-### SET responses:  
+SET responses:  
 - "200 OK"      "Record created successfully"
 - "200 OK"      "Record updated successfully"
 - "403 Forbidden"   "Unauthorized request"
@@ -54,7 +54,7 @@ Del-Token: token
 - *Key* (required) is the unique ID that is going to be associated with the *data*
 - *Token* (required) is an alphanumerical string that is set in the server settings.json file that allows overriding of existent data
 
-### DEL responses:  
+DEL responses:  
 - "200 OK"      "Record deleted"
 - "403 Forbidden"   "Unauthorized request"
 - "404 ERROR"   "No record to be deleted"
