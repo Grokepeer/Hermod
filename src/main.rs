@@ -4,7 +4,6 @@
 
 //Importing standard libraries
 use std::{
-    mem,
     str,
     io::{prelude::*},
     net::{TcpListener, TcpStream},
@@ -18,13 +17,13 @@ use Hermod::llb::{
 };
 
 fn main() {
-    let W = 4;  //HTTP server thread count
+    let w = 4;  //HTTP server thread count
     println!("[Hermod] Up and running...");
-    println!("[Hermod] Hermod settings:\n - Core Count:\t{W}\n - ANN Optimization:\t disabled");
+    println!("[Hermod] Hermod settings:\n - Core Count:\t{w}\n - ANN Optimization:\t disabled");
 
     let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     
-    let pool = ThreadPool::new(W);  //New ThreadPool requested with worker count N
+    let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
 
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store: Arc<RwLock<Vec<Arc<KeyData>>>> = Arc::new(RwLock::new(Vec::new()));
@@ -117,7 +116,7 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
                 }
             }
             Err(_) => {
-                stream.write_all(badreq.as_bytes());
+                stream.write_all(badreq.as_bytes()).unwrap();
                 return
             }
         }
@@ -127,9 +126,9 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
 
     // thread::sleep(time::Duration::from_millis(4000));
 
-    let mut resbody = "";
-    let mut bodystring = String::from("");
-    let mut reshead = "";
+    let bodystring: String;
+    let reshead;
+    let resbody;
     (reshead, resbody) = match httpheader.as_str() {
         "GET /get HTTP/1.1" => {
             match find_key(&key, Arc::clone(&store)) {
@@ -138,7 +137,11 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
                     ("200 OK", bodystring.as_str())
                 }
                 Err(e) => {
-                    ("404 ERROR", e)
+                    if e == "No key found" {
+                        ("404 ERROR", e)
+                    } else {
+                        ("500 ERROR", e)
+                    }
                 }
             }
         }
@@ -187,8 +190,8 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
             }
         }
         _ => {
-            println!("Unrecognized request");
-            ("400 Bad Request", "Unrecognized request")
+            println!("Unrecognized path");
+            ("400 Bad Request", "Unrecognized path")
         }
     };
     

@@ -1,7 +1,7 @@
 //Importing standard libraries
 use std::{
     thread,
-    sync::{mpsc, Arc, Mutex, RwLock}
+    sync::{mpsc, Arc, Mutex}
 };
 
 //Data structure used in the KeysVector, points to another space in the heap that contains all data paired with the key in a String
