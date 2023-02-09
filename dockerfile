@@ -6,6 +6,6 @@ WORKDIR /usr/src/hermod
 COPY ./src ./src
 COPY ./Cargo.toml ./Cargo.toml
 
-RUN cargo build
+RUN cargo build -r
 
-CMD ["cargo", "run"]
+CMD ["cargo", "run", "-r"]

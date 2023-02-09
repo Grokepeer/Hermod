@@ -11,7 +11,7 @@ use std::{
 };
 
 //Importing libraries structs and functions
-use Hermod::llb::{
+use hermod::llb::{
     threads::ThreadPool,
     threads::KeyData
 };
