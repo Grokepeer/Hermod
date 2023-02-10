@@ -10,5 +10,3 @@ members = ["."]
 [[bin]]
 name = "hermod"
 path = "src/main.rs"
-
-[dependencies]

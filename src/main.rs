@@ -4,6 +4,7 @@
 
 //Importing standard libraries
 use std::{
+    env,
     str,
     io::{prelude::*},
     net::{TcpListener, TcpStream},
@@ -17,28 +18,41 @@ use hermod::llb::{
 };
 
 fn main() {
-    let w = 4;  //HTTP server thread count
-    println!("[Hermod] Up and running...");
-    println!("[Hermod] Hermod settings:\n - Core Count:\t{w}\n - ANN Optimization:\t disabled");
+    let mut w = 1;  //HTTP server thread count
+    let mut deltoken = Arc::new(String::from("token"));
 
-    let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
+    let variables = env::vars();
+    for (key, value) in variables.into_iter() {
+        if key == "HTTP_Threads" {
+            w = value.parse().unwrap()
+        }
+        if key == "Del_Token" {
+            deltoken = Arc::new(value)
+        }
+    }
     
+    let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
-
+    
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store: Arc<RwLock<Vec<Arc<KeyData>>>> = Arc::new(RwLock::new(Vec::new()));
-
+    
     //Initializing the store vector, if the vector is not initialized mpsc channels locks will panick at empty content
     store.write().expect("[Hermod] An error occured when allocating memory to the main KeysVector").push(Arc::new({ KeyData {
         key: String::from("_base"),
         pair: Mutex::new(String::from("_base")),
     }}));
-
+    
+    println!("[Hermod] Up and running...");
+    println!("[Hermod] HTTP Server threads: {w}");
+    println!("[Hermod] Del_Token: {deltoken}");
+    
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
                 let store_clone = Arc::clone(&store);
-                pool.execute(|| { handle(stream, store_clone) });    //Sends the job off to the ThreadPool
+                let deltoken_clone = Arc::clone(&deltoken);
+                pool.execute(|| { handle(stream, store_clone, deltoken_clone) });    //Sends the job off to the ThreadPool
             }
             Err(_) => {
                 println!("[Hermod] Stream error when accepting connection.")
@@ -49,28 +63,25 @@ fn main() {
     println!("[Hermod] Shutting down.");
 }
 
-fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
+fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>, dt: Arc<String>) {
     let mut req = String::from("");  //Vector containing the complete HTTP request (groups together all buffers)
     let mut cl = 0; //Content-Length
     let mut key = String::from("");    //Data Key
     let mut deltoken = String::from("");  //Destruction token
-    let mut httpheader = String::from("");
+    let mut httpheader = String::from("");  //First HTTP header (GET /path HTTP/1.1)
     let mut reqbody = String::from("");
     let mut clcheck: bool = false; //Content-Length has-been-acquired check
-
-    let dt = "deltoken";
+    let dt = String::from(dt.as_str());
 
     let badreq = "HTTP/1.1 400 Bad Request\r\nBad Request";
 
     loop {   //The handle reads data by buffers of 500 bytes, if the first doesn't contain the required headers it drops the request
-        // println!("Loop");
         let mut buffer = [0; 500];
         match stream.read(&mut buffer) {    //Reads from the stream the first buffer of requests
             Ok(_) => {
                 let reqstring = str::from_utf8(&buffer).unwrap();
 
                 if !clcheck {    //If there's no Content-Length defined yet it will search for it in the buffer received
-                    // println!("clcheck false");
                     let reqlines: Vec<_> = reqstring.lines().collect(); //It slices the headers in lines to read each
                     httpheader = String::from(reqlines[0]);
                     
@@ -91,12 +102,10 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
                         if line.starts_with("Data-Key") {
                             let tcl: Vec<&str> = line.split(":").collect();
                             key = String::from(tcl[1].trim());
-                            key = key.replace("\"", "");
                         }
                         if line.starts_with("Del-Token") {
                             let tcl: Vec<&str> = line.split(":").collect();
                             deltoken = String::from(tcl[1].trim());
-                            deltoken = deltoken.replace("\"", "");
                         }
                     }
                 }
@@ -111,7 +120,6 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
                 }
                 
                 if bodylen >= cl {   //If the body (the request part after the double new line) len() is longer than the declared Content-Length it stops reading
-                    // println!("Break");
                     break
                 }
             }
@@ -121,10 +129,6 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
             }
         }
     }
-
-    println!("[Hermod] Received request: {:?}", req.trim_matches(char::from(0)));
-
-    // thread::sleep(time::Duration::from_millis(4000));
 
     let bodystring: String;
     let reshead;
@@ -173,7 +177,7 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>) {
         "GET /del HTTP/1.1" => {
             match find_key(&key, Arc::clone(&store)) {
                 Ok(res) => {
-                    if deltoken.as_str() == dt {
+                    if deltoken == dt {
                         store.write().unwrap().swap_remove(res.1);
                         ("200 OK", "Record deleted")
                     } else {

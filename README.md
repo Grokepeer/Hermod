@@ -4,6 +4,21 @@
 
 Hermod is an In-Memory database management system that was designed for YBD. It uses a custom multi-threaded http server. Stores data in a key-based table that is optimized by an ANN to prioritize data based on access patterns.
 
+## Installation
+```
+services:
+  hermod:
+    image: grokepeer/hermod:0.1.2
+    ports:
+      - 2088:2088
+    environment:
+      - HTTP_Threads=n
+      - Del_Token=token
+```
+
+Once the service is started and printed "[Hermod] Up and running..." the DB is ready to receive requests.
+In case env variables are not provided or they are unacceptable, Hermod will take the defaults (1 thread, "token" token)
+
 ## API
 
 Hermod API supports get, set, and del operations which are described, in details, in the following paragraphs
