@@ -4,7 +4,7 @@
 
 Hermod is an In-Memory database management system that was designed for YBD. It uses a custom multi-threaded http server. Stores data in a key-based table that is optimized by an ANN to prioritize data based on access patterns.
 
-## Installation
+## Docker Installation
 ```
 services:
   hermod:

@@ -76,14 +76,19 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>, dt: Arc<
     let badreq = "HTTP/1.1 400 Bad Request\r\nBad Request";
 
     loop {   //The handle reads data by buffers of 500 bytes, if the first doesn't contain the required headers it drops the request
-        let mut buffer = [0; 500];
+        let mut buffer = [0; 50];
         match stream.read(&mut buffer) {    //Reads from the stream the first buffer of requests
             Ok(_) => {
                 let reqstring = str::from_utf8(&buffer).unwrap();
 
-                if !clcheck {    //If there's no Content-Length defined yet it will search for it in the buffer received
+                if true {    //If there's no Content-Length defined yet it will search for it in the buffer received
                     let reqlines: Vec<_> = reqstring.lines().collect(); //It slices the headers in lines to read each
-                    httpheader = String::from(reqlines[0]);
+                    println!("Fuck {:?}", reqlines);
+                    
+                    //If the header wasn't already set
+                    if httpheader == "" {
+                        httpheader = String::from(reqlines[0]);
+                    }
                     
                     for line in reqlines {  //Reads each line of the casted request
                         if line.starts_with("Content-Length") { //Gets the Content-Length
@@ -114,13 +119,15 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>, dt: Arc<
 
                 let mut bodylen = 0;
                 if req.contains("\r\n\r\n") {   //If the request has a body it starts to count the length
-                    let body: Vec<&str> = req.split("\r\n\r\n").collect();
-                    bodylen = body[1].len();
-                    reqbody = String::from(body[1]);
-                }
-                
-                if bodylen >= cl {   //If the body (the request part after the double new line) len() is longer than the declared Content-Length it stops reading
-                    break
+                    let mut bodysplit = req.splitn(2, "\r\n\r\n");
+                    bodysplit.next().unwrap();
+                    let body = bodysplit.next().unwrap();
+                    bodylen = body.len();
+
+                    if bodylen >= cl {   //If the body (the request part after the double new line) len() is longer than the declared Content-Length it stops reading
+                        reqbody = String::from(body);
+                        break
+                    }
                 }
             }
             Err(_) => {
@@ -129,6 +136,9 @@ fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>, dt: Arc<
             }
         }
     }
+
+    println!("{req}");
+    println!("{httpheader}");
 
     let bodystring: String;
     let reshead;
