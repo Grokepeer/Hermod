@@ -94,7 +94,7 @@ pub fn handle(mut stream: TcpStream, store: DataBase) {
     let resbody;
     (reshead, resbody) = match httpheader.as_str() {
         "GET /get HTTP/1.1" => {
-            match find_key(&key, Arc::clone(&store)) {
+            match "" {
                 Ok(res) => {
                     bodystring = res.0.pair.lock().unwrap().to_string();
                     ("200 OK", bodystring.as_str())
@@ -110,7 +110,7 @@ pub fn handle(mut stream: TcpStream, store: DataBase) {
         }
 
         "GET /set HTTP/1.1" => {
-            match find_key(&key, Arc::clone(&store)) {
+            match "" {
                 Ok(res) => {
                     if deltoken.as_str() == dt {
                         *(res.0).pair.lock().unwrap() = String::from(reqbody.trim_matches(char::from(0)));
@@ -134,7 +134,7 @@ pub fn handle(mut stream: TcpStream, store: DataBase) {
         }
 
         "GET /del HTTP/1.1" => {
-            match find_key(&key, Arc::clone(&store)) {
+            match "" {
                 Ok(res) => {
                     if deltoken == dt {
                         store.write().unwrap().swap_remove(res.1);
@@ -162,23 +162,4 @@ pub fn handle(mut stream: TcpStream, store: DataBase) {
     let length = res_content.len();
     let response = format!("{status}\r\nContent-Length: {length}\r\n\r\n{res_content}");
     stream.write_all(response.as_bytes()).unwrap();
-}
-
-fn find_key(key: &str, store: DataTable) -> Result<(Arc<KeyData>, usize), &'static str> {
-    let storerlock = match store.read() {
-        Ok(lock) => lock,
-        Err(_) => {
-            return Err("Couldn't get a store lock on");
-        }
-    };
-
-    let mut i: usize = 0;
-    for keydata in storerlock.iter() {
-        if keydata.key.as_str() == key {
-            return Ok((Arc::clone(&keydata), i));
-        }
-        i += 1;
-    }
-
-    Err("No key found")
 }

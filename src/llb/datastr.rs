@@ -16,34 +16,38 @@ pub struct DataTable {
     table: RwLock<Vec<Arc<KeyData>>>
 }
 
-pub type DataBase = RwLock<Vec<Arc<DataTable>>>;
+pub struct DataBase(RwLock<Vec<Arc<DataTable>>>);
 
 impl DataBase {
     pub fn new() -> DataBase {
-        let mut db = RwLock::new(Vec::new());
+        let mut db = DataBase(RwLock::new(Vec::new()));
         db.createTable("_basedb");
 
         db
     }
 
-    pub fn getOpTable(self, tablename: &str) {
-        for table in self.write().unwrap().iter() {
+    pub fn getOpTable(self, tablename: &str) -> Result<&Arc<DataTable>, &'static str> {
+        for table in self.0.write().unwrap().iter() {
             if table.key.as_str() == tablename {
-                return table
+                return Ok(table)
             }
         }
+
+        Err("no result")
     }
 
-    pub fn getTable(self, tablename: &str) {
-        for table in self.read().unwrap().iter() {
+    pub fn getTable(self, tablename: &str) -> Result<&Arc<DataTable>, &'static str> {
+        for table in self.0.read().unwrap().iter() {
             if table.key.as_str() == tablename {
-                return table
+                return Ok(table)
             }
         }
+
+        Err("no result")
     }
 
     pub fn createTable(self, tablename: &str) {
-        self.write().unwrap().push(Arc::new(DataTable::new(tablename)))
+        self.0.write().unwrap().push(Arc::new(DataTable::new(tablename)))
     }
 }
 
@@ -58,20 +62,24 @@ impl DataTable {
         }
     }
 
-    pub fn getOpRecord(self, recordkey: &str) {
+    pub fn getOpRecord(self, recordkey: &str) -> Result<&Arc<KeyData>, &'static str> {
         for record in self.table.write().unwrap().iter() {
             if record.key.as_str() == recordkey {
-                return record
+                return Ok(record)
             }
         }
+
+        Err("no result")
     }
 
-    pub fn getRecord(self, recordkey: &str) {
+    pub fn getRecord(self, recordkey: &str) -> Result<&Arc<KeyData>, &'static str> {
         for record in self.table.read().unwrap().iter() {
             if record.key.as_str() == recordkey {
-                return record
+                return Ok(record)
             }
         }
+
+        Err("no result")
     }
 
     pub fn createRecord(self, recordkey: &str, recordata: &str) {
