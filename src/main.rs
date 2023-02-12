@@ -12,9 +12,9 @@ use std::{
 
 //Importing libraries structs and functions
 use hermod::llb::{
+    datastr::DataBase,
     threads::ThreadPool,
-    threads::KeyData,
-    handle::handle,
+    handle::handle
 };
 
 fn main() {
@@ -35,13 +35,8 @@ fn main() {
     let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
-    let store: Arc<RwLock<Vec<Arc<KeyData>>>> = Arc::new(RwLock::new(Vec::new()));
-    
-    //Initializing the store vector, if the vector is not initialized mpsc channels locks will panick at empty content
-    store.write().expect("[Hermod] An error occured when allocating memory to the main KeysVector").push(Arc::new({ KeyData {
-        key: String::from("_base"),
-        pair: Mutex::new(String::from("_base")),
-    }}));
+    let store = DataBase::new();
+    println!("Get this: {}", store.getTable("_basedb").getRecord("_base").key);
     
     println!("[Hermod] Up and running...");
     println!("[Hermod] HTTP Server threads: {w}");
@@ -51,8 +46,7 @@ fn main() {
         match stream {
             Ok(stream) => {
                 let store_clone = Arc::clone(&store);
-                let deltoken_clone = Arc::clone(&deltoken);
-                pool.execute(|| { handle(stream, store_clone, deltoken_clone) });    //Sends the job off to the ThreadPool
+                pool.execute(|| { handle(stream, store_clone) });    //Sends the job off to the ThreadPool
             }
             Err(_) => {
                 println!("[Hermod] Stream error when accepting connection.")

@@ -6,11 +6,13 @@ use std::{
     sync::{Arc, RwLock, Mutex}
 };
 
-use super::threads::{
+use super::datastr::{
+    DataBase,
+    DataTable,
     KeyData
 };
 
-pub fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>, dt: Arc<String>) {
+pub fn handle(mut stream: TcpStream, store: DataBase) {
     let mut req = String::from("");  //Vector containing the complete HTTP request (groups together all buffers)
     let mut cl = 0; //Content-Length
     let mut key = String::from("");    //Data Key
@@ -18,7 +20,7 @@ pub fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>, dt: 
     let mut httpheader = String::from("");  //First HTTP header (GET /path HTTP/1.1)
     let mut reqbody = String::from("");
     let mut clcheck: bool = false; //Content-Length has-been-acquired check
-    let dt = String::from(dt.as_str());
+    let dt = String::from("test");
 
     let badreq = "HTTP/1.1 400 Bad Request\r\nBad Request";
 
@@ -162,7 +164,7 @@ pub fn handle(mut stream: TcpStream, store: Arc<RwLock<Vec<Arc<KeyData>>>>, dt: 
     stream.write_all(response.as_bytes()).unwrap();
 }
 
-fn find_key(key: &str, store: Arc<RwLock<Vec<Arc<KeyData>>>>) -> Result<(Arc<KeyData>, usize), &'static str> {
+fn find_key(key: &str, store: DataTable) -> Result<(Arc<KeyData>, usize), &'static str> {
     let storerlock = match store.read() {
         Ok(lock) => lock,
         Err(_) => {

@@ -4,12 +4,6 @@ use std::{
     sync::{mpsc, Arc, Mutex}
 };
 
-//Data structure used in the KeysVector, points to another space in the heap that contains all data paired with the key in a String
-pub struct KeyData {
-    pub key: String,
-    pub pair: Mutex<String>,
-}
-
 //ThreadPool structure that is used by the HTTP Server to send request onto workers, also contains mpsc channel informations for the workers
 pub struct ThreadPool {
     workers: Vec<Worker>,
