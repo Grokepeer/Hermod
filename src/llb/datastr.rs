@@ -16,18 +16,22 @@ pub struct DataTable {
     table: RwLock<Vec<Arc<KeyData>>>
 }
 
-pub struct DataBase(RwLock<Vec<Arc<DataTable>>>);
+pub struct DataBase {
+    db: RwLock<Vec<Arc<DataTable>>>
+}
 
 impl DataBase {
     pub fn new() -> DataBase {
-        let mut db = DataBase(RwLock::new(Vec::new()));
-        db.createTable("_basedb");
+        let mut database = { DataBase {
+            db: RwLock::new(Vec::new())
+        }};
+        database.createTable("_basedb");
 
-        db
+        return database
     }
 
     pub fn getOpTable(self, tablename: &str) -> Result<&Arc<DataTable>, &'static str> {
-        for table in self.0.write().unwrap().iter() {
+        for table in self.db.write().unwrap().iter() {
             if table.key.as_str() == tablename {
                 return Ok(table)
             }
@@ -37,7 +41,7 @@ impl DataBase {
     }
 
     pub fn getTable(self, tablename: &str) -> Result<&Arc<DataTable>, &'static str> {
-        for table in self.0.read().unwrap().iter() {
+        for table in self.db.read().unwrap().iter() {
             if table.key.as_str() == tablename {
                 return Ok(table)
             }
@@ -47,19 +51,19 @@ impl DataBase {
     }
 
     pub fn createTable(self, tablename: &str) {
-        self.0.write().unwrap().push(Arc::new(DataTable::new(tablename)))
+        self.db.write().unwrap().push(Arc::new(DataTable::new(tablename)))
     }
 }
 
 impl DataTable {
     pub fn new(tablename: &str) -> DataTable {
-        let mut table = RwLock::new(Vec::new());
-        table.createRecord("_base", "_data");
-
-        DataTable {
+        let mut datatable = { DataTable {
             key: String::from(tablename),
-            table
-        }
+            table: RwLock::new(Vec::new())
+        }};
+        datatable.createRecord("_base", "_data");
+
+        return datatable
     }
 
     pub fn getOpRecord(self, recordkey: &str) -> Result<&Arc<KeyData>, &'static str> {
