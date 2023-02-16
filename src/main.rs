@@ -35,8 +35,10 @@ fn main() {
     let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
-    let store = DataBase::new();
-    println!("Get this: {}", store.getTable("_basedb").getRecord("_base").key);
+    let store = Arc::new(DataBase::new());
+    println!("Get this: {}", store.get_table("_basedb").unwrap().get_record("_base").unwrap().data.lock().unwrap());
+    store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
+    println!("This is: {}", store.get_table("_basedb").unwrap().get_record("testkey").unwrap().data.lock().unwrap());
     
     println!("[Hermod] Up and running...");
     println!("[Hermod] HTTP Server threads: {w}");

@@ -1,6 +1,7 @@
 //Importing standard libraries
 use std::{
     str,
+    time::Instant,
     io::{Write, Read},
     net::{TcpListener, TcpStream},
     sync::{Arc, RwLock, Mutex}
@@ -12,7 +13,8 @@ use super::datastr::{
     KeyData
 };
 
-pub fn handle(mut stream: TcpStream, store: DataBase) {
+pub fn handle(mut stream: TcpStream, store: Arc<DataBase>) {
+    let timestart = Instant::now();
     let mut req = String::from("");  //Vector containing the complete HTTP request (groups together all buffers)
     let mut cl = 0; //Content-Length
     let mut key = String::from("");    //Data Key
@@ -94,72 +96,20 @@ pub fn handle(mut stream: TcpStream, store: DataBase) {
     let resbody;
     (reshead, resbody) = match httpheader.as_str() {
         "GET /get HTTP/1.1" => {
-            match "" {
-                Ok(res) => {
-                    bodystring = res.0.pair.lock().unwrap().to_string();
-                    ("200 OK", bodystring.as_str())
-                }
-                Err(e) => {
-                    if e == "No key found" {
-                        ("404 ERROR", e)
-                    } else {
-                        ("500 ERROR", e)
-                    }
-                }
-            }
+            ("200 OK", store.get_table("_basedb").unwrap().get_record("_base").unwrap().data.lock().unwrap().to_string())
         }
 
-        "GET /set HTTP/1.1" => {
-            match "" {
-                Ok(res) => {
-                    if deltoken.as_str() == dt {
-                        *(res.0).pair.lock().unwrap() = String::from(reqbody.trim_matches(char::from(0)));
-                        ("200 OK", "Record updated successfully")
-                    } else {
-                        ("403 Forbidden", "Unauthorized request")
-                    }
-                }
-                Err(e) => {
-                    if e == "No key found" {
-                        store.write().unwrap().push(Arc::new({ KeyData {
-                            key: key,
-                            pair: Mutex::new(String::from(reqbody.trim_matches(char::from(0))))
-                        }}));
-                        ("200 OK", "Record created successfully")
-                    } else {
-                        ("500 ERROR", e)
-                    }
-                }
-            }
-        }
-
-        "GET /del HTTP/1.1" => {
-            match "" {
-                Ok(res) => {
-                    if deltoken == dt {
-                        store.write().unwrap().swap_remove(res.1);
-                        ("200 OK", "Record deleted")
-                    } else {
-                        ("403 Forbidden", "Unauthorized request")
-                    }
-                }
-                Err(e) => {
-                    if e == "No key found" {
-                        ("404 ERROR", "No record to be deleted")
-                    } else {
-                        ("500 ERROR", e)
-                    }
-                }
-            }
-        }
         _ => {
             println!("Unrecognized path");
-            ("400 Bad Request", "Unrecognized path")
+            ("400 Bad Request", "Unrecognized path".to_string())
         }
     };
     
     let (status, res_content) = ("HTTP/1.1 ".to_owned() + reshead, resbody.to_string());
     let length = res_content.len();
     let response = format!("{status}\r\nContent-Length: {length}\r\n\r\n{res_content}");
+
+    println!("Query chronometer: {:.2?}", timestart.elapsed());
+
     stream.write_all(response.as_bytes()).unwrap();
 }

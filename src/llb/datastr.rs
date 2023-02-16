@@ -5,91 +5,166 @@ use std::{
     sync::{Arc, RwLock, Mutex}
 };
 
-//Data structure used in the KeysVector, points to another space in the heap that contains all data paired with the key in a String
+//Data structure used in the DB, points to another space in the heap that contains all data paired with the key in a String
 pub struct KeyData {
-    key: String,
-    data: Mutex<String>
+    pub key: String,
+    pub data: Mutex<String>
 }
 
 pub struct DataTable {
-    key: String,
-    table: RwLock<Vec<Arc<KeyData>>>
+    pub key: String,
+    pub table: RwLock<Vec<Arc<KeyData>>>
 }
 
 pub struct DataBase {
-    db: RwLock<Vec<Arc<DataTable>>>
+    pub db: RwLock<Vec<Arc<DataTable>>>
 }
 
 impl DataBase {
     pub fn new() -> DataBase {
-        let mut database = { DataBase {
+        let database = { DataBase {
             db: RwLock::new(Vec::new())
         }};
-        database.createTable("_basedb");
+        database.create_table("_basedb");
 
         return database
     }
 
-    pub fn getOpTable(self, tablename: &str) -> Result<&Arc<DataTable>, &'static str> {
-        for table in self.db.write().unwrap().iter() {
-            if table.key.as_str() == tablename {
-                return Ok(table)
+    //This function looks for a table in the db given a table key and returns a pointer to the table
+    //Returns Err("no result") if the table couldn't be found
+    //Returns Err("server error") if the function couldn't complete the operation
+    pub fn get_table(&self, tablename: &str) -> Result<Arc<DataTable>, &'static str> {
+        match self.db.read() {
+            Ok(db) => {
+                for table in db.iter() {
+                    if table.key.as_str() == tablename {
+                        return Ok(Arc::clone(table))
+                    }
+                }
+            }
+            Err(_) => {
+                println!("[Hermod] Unable to get db.read() access");
+                return Err("server error")
             }
         }
 
         Err("no result")
     }
 
-    pub fn getTable(self, tablename: &str) -> Result<&Arc<DataTable>, &'static str> {
-        for table in self.db.read().unwrap().iter() {
-            if table.key.as_str() == tablename {
-                return Ok(table)
+    //This function looks for a table in the db
+    //Returns 1 if the table exists, 0 if it doesn't and -1 if the function couldn't complete the operation correctly
+    fn is_table(&self, tablename: &str) -> i8 {
+        match self.db.read() {
+            Ok(db) => {
+                for table in db.iter() {
+                    if table.key.as_str() == tablename {
+                        return 1
+                    }
+                }
+            }
+            Err(_) => {
+                println!("[Hermod] Unable to get db.read() access");
+                return -1
             }
         }
-
-        Err("no result")
+        
+        return 0
     }
 
-    pub fn createTable(self, tablename: &str) {
-        self.db.write().unwrap().push(Arc::new(DataTable::new(tablename)))
+    //This function creates a table in the db that it was called upon
+    //Returns 0 if the operation was successful, 1 if the table already existed, -1 if the function couldn't complete properly
+    pub fn create_table(&self, tablename: &str) -> i8 {
+        match self.is_table(tablename) {
+            0 => {
+                match self.db.write() {
+                    Ok(mut db) => {
+                        db.push(Arc::new(DataTable::new(tablename)));
+                        return 0
+                    }
+                    Err(_) => {
+                        println!("[Hermod] Unable to get db.write() access");
+                        return -1
+                    }
+                }
+            }
+            r => return r
+        }
     }
 }
 
 impl DataTable {
     pub fn new(tablename: &str) -> DataTable {
-        let mut datatable = { DataTable {
+        let datatable = { DataTable {
             key: String::from(tablename),
             table: RwLock::new(Vec::new())
         }};
-        datatable.createRecord("_base", "_data");
+        datatable.create_record("_base", "_data");
 
         return datatable
     }
 
-    pub fn getOpRecord(self, recordkey: &str) -> Result<&Arc<KeyData>, &'static str> {
-        for record in self.table.write().unwrap().iter() {
-            if record.key.as_str() == recordkey {
-                return Ok(record)
+    //This function looks for a record (given a record key) in the table that the function was called upon and returns a pointer to the record
+    //Returns Err("no result") if the record couldn't be found
+    //Returns Err("server error") if the function couldn't complete the operation
+    pub fn get_record(&self, recordkey: &str) -> Result<Arc<KeyData>, &'static str> {
+        match self.table.read() {
+            Ok(table) => {
+                for record in table.iter() {
+                    if record.key.as_str() == recordkey {
+                        return Ok(Arc::clone(record))
+                    }
+                }
+            }
+            Err(_) => {
+                println!("[Hermod] Unable to get table.read() access");
+                return Err("server error")
             }
         }
 
         Err("no result")
     }
 
-    pub fn getRecord(self, recordkey: &str) -> Result<&Arc<KeyData>, &'static str> {
-        for record in self.table.read().unwrap().iter() {
-            if record.key.as_str() == recordkey {
-                return Ok(record)
+    //This function looks for a record in the table it was called upon
+    //Returns 1 if the record exists, 0 if it doesn't and -1 if the function couldn't complete the operation correctly
+    fn is_record(&self, recordkey: &str) -> i8 {
+        match self.table.read() {
+            Ok(table) => {
+                for record in table.iter() {
+                    if record.key.as_str() == recordkey {
+                        return 1
+                    }
+                }
+            }
+            Err(_) => {
+                println!("[Hermod] Unable to get table.read() access");
+                return -1
             }
         }
-
-        Err("no result")
+        
+        return 0
     }
 
-    pub fn createRecord(self, recordkey: &str, recordata: &str) {
-        self.table.write().unwrap().push(Arc::new({ KeyData {
-            key: String::from(recordkey),
-            data: Mutex::new(String::from(recordata))
-        }}))
+    //This function creates a record in the table that it was called upon
+    //Returns 0 if the operation was successful, 1 if the record already existed, -1 if the function couldn't complete properly
+    pub fn create_record(&self, recordkey: &str, recordata: &str) -> i8 {
+        match self.is_record(recordkey) {
+            0 => {
+                match self.table.write() {
+                    Ok(mut table) => {
+                        table.push(Arc::new({ KeyData {
+                            key: String::from(recordkey),
+                            data: Mutex::new(String::from(recordata))
+                        }}));
+                        
+                        return 0
+                    }
+                    Err(_) => {
+                        println!("[Hermod] Unable to get table.write() access");
+                        return -1
+                    }
+                }
+            }
+            r => return r
+        }
     }
 }
