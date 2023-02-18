@@ -96,7 +96,7 @@ pub fn handle(mut stream: TcpStream, store: Arc<DataBase>) {
     let resbody;
     (reshead, resbody) = match httpheader.as_str() {
         "GET /get HTTP/1.1" => {
-            ("200 OK", store.get_table("_basedb").unwrap().get_record("_base").unwrap().data.lock().unwrap().to_string())
+            ("200 OK", store.get_table("_basedb").unwrap().get_record("_base").unwrap().data.read().unwrap().to_string())
         }
 
         _ => {

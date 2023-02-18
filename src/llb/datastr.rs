@@ -2,13 +2,13 @@
 use std::{
     str,
     io::{Write, Read},
-    sync::{Arc, RwLock, Mutex}
+    sync::{Arc, RwLock}
 };
 
 //Data structure used in the DB, points to another space in the heap that contains all data paired with the key in a String
 pub struct KeyData {
     pub key: String,
-    pub data: Mutex<String>
+    pub data: RwLock<String>
 }
 
 pub struct DataTable {
@@ -153,7 +153,7 @@ impl DataTable {
                     Ok(mut table) => {
                         table.push(Arc::new({ KeyData {
                             key: String::from(recordkey),
-                            data: Mutex::new(String::from(recordata))
+                            data: RwLock::new(String::from(recordata))
                         }}));
                         
                         return 0
