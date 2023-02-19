@@ -2,7 +2,7 @@
 use std::{
     str,
     time::Instant,
-    io::{Write, Read},
+    io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
     sync::{Arc, RwLock, Mutex}
 };
@@ -12,6 +12,8 @@ use super::datastr::{
     DataTable,
     KeyData
 };
+
+struct
 
 pub fn handle(mut stream: TcpStream, store: Arc<DataBase>) {
     let timestart = Instant::now();
@@ -24,71 +26,22 @@ pub fn handle(mut stream: TcpStream, store: Arc<DataBase>) {
     let mut clcheck: bool = false; //Content-Length has-been-acquired check
     let dt = String::from("test");
 
-    let badreq = "HTTP/1.1 400 Bad Request\r\nBad Request";
+    let mut buffer = BufReader::new(&stream);
 
-    loop {   //The handle reads data by buffers of 500 bytes, if the first doesn't contain the required headers it drops the request
-        let mut buffer = [0; 50];
-        match stream.read(&mut buffer) {    //Reads from the stream the first buffer of requests
-            Ok(_) => {
-                let reqstring = str::from_utf8(&buffer).unwrap();
+    loop {   //The handle reads data by buffers of 500 bytes
+        let mut line = String::from("");
+        let linelen = buffer.read_line(&mut line).unwrap();
+        println!("Line: {}, {}", line, buffer.capacity());
 
-                if true {    //If there's no Content-Length defined yet it will search for it in the buffer received
-                    let reqlines: Vec<_> = reqstring.lines().collect(); //It slices the headers in lines to read each
-                    println!("Fuck {:?}", reqlines);
-                    
-                    //If the header wasn't already set
-                    if httpheader == "" {
-                        httpheader = String::from(reqlines[0]);
-                    }
-                    
-                    for line in reqlines {  //Reads each line of the casted request
-                        if line.starts_with("Content-Length") { //Gets the Content-Length
-                            let tcl: Vec<&str> = line.split(":").collect();
-                            // println!("Got content-length here: {}", line);
-                            cl = match tcl[1].trim().parse() {  //Casts CT to u8, if it fails the content length is considered 0
-                                Ok(cl) => { 
-                                    clcheck = true;
-                                    cl 
-                                }
-                                Err(_) => { 
-                                    0 
-                                }
-                            };
-                        }
-                        if line.starts_with("Data-Key") {
-                            let tcl: Vec<&str> = line.split(":").collect();
-                            key = String::from(tcl[1].trim());
-                        }
-                        if line.starts_with("Del-Token") {
-                            let tcl: Vec<&str> = line.split(":").collect();
-                            deltoken = String::from(tcl[1].trim());
-                        }
-                    }
-                }
-
-                req.push_str(reqstring); //Extends the vector containing the complete request
-
-                let mut bodylen = 0;
-                if req.contains("\r\n\r\n") {   //If the request has a body it starts to count the length
-                    let mut bodysplit = req.splitn(2, "\r\n\r\n");
-                    bodysplit.next().unwrap();
-                    let body = bodysplit.next().unwrap();
-                    bodylen = body.len();
-
-                    if bodylen >= cl {   //If the body (the request part after the double new line) len() is longer than the declared Content-Length it stops reading
-                        reqbody = String::from(body);
-                        break
-                    }
-                }
-            }
-            Err(_) => {
-                stream.write_all(badreq.as_bytes()).unwrap();
-                return
-            }
+        if linelen == 2 {
+            break;
         }
     }
 
-    println!("{req}");
+    let mut body: Vec<_> = vec![];
+    buffer.read_until(70, &mut body);
+
+    println!("{:?}", String::from_utf8(body).unwrap());
     println!("{httpheader}");
 
     let bodystring: String;

@@ -1,0 +1,33 @@
+if true {    //If there's no Content-Length defined yet it will search for it in the buffer received
+    let reqlines: Vec<_> = reqstring.lines().collect(); //It slices the headers in lines to read each
+    println!("Fuck {:?}", reqlines);
+    
+    //If the header wasn't already set
+    if httpheader == "" {
+        httpheader = String::from(reqlines[0]);
+    }
+    
+    for line in reqlines {  //Reads each line of the casted request
+        if line.starts_with("Content-Length") { //Gets the Content-Length
+            let tcl: Vec<&str> = line.split(":").collect();
+            // println!("Got content-length here: {}", line);
+            cl = match tcl[1].trim().parse() {  //Casts CT to u8, if it fails the content length is considered 0
+                Ok(cl) => { 
+                    clcheck = true;
+                    cl 
+                }
+                Err(_) => { 
+                    0 
+                }
+            };
+        }
+        if line.starts_with("Data-Key") {
+            let tcl: Vec<&str> = line.split(":").collect();
+            key = String::from(tcl[1].trim());
+        }
+        if line.starts_with("Del-Token") {
+            let tcl: Vec<&str> = line.split(":").collect();
+            deltoken = String::from(tcl[1].trim());
+        }
+    }
+}
