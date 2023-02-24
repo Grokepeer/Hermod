@@ -20,9 +20,11 @@ pub fn handle(mut stream: TcpStream, store: Arc<DataBase>) {
     let timestart = Instant::now();
     let dt = String::from("test");
 
-    let mut buffer = HTTP::new(BufReader::new(&stream));
+    let httpreq = HTTP::new(&stream).unwrap();
+    let timelapse = Instant::now();
+    println!("HTTP req reading done: {:.2?}", timestart.elapsed());
 
-    println!("Status: {}\nHeaders: {:?}", buffer.status, buffer.headers);
+    println!("Status: {}\nHeaders: {:?}\nBody: {}", httpreq.status, httpreq.headers, httpreq.body);
 
     // println!("{:?}", String::from_utf8(body).unwrap());
     // println!("{httpheader}");
