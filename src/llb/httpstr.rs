@@ -1,4 +1,5 @@
 use std::{
+    str,
     io::{prelude::*, BufReader},
     net::{TcpStream}
 };
@@ -53,7 +54,7 @@ impl HTTP {
             linebuf = linebuf.replace("\r\n", "");
 
             if linebuf.starts_with("Content-Length") {
-                let tcl: Vec<&str> = line.split(":").collect();
+                let tcl: Vec<&str> = linebuf.split(":").collect();
                 contentlength = match tcl[1].trim().parse() {  //Casts CT to u8, if it fails the content length is considered 0
                     Ok(cl) => cl,
                     Err(_) => 0
@@ -67,13 +68,13 @@ impl HTTP {
             }
         }
 
-        let mut body = String::from("")
-        if contentlength > 0 {
+        let mut body = String::from("");
+        if contentlength > 0 {  //If there's content in the request
             loop {
-                let mut buffer = [0; 500];
-                let size = buffer.read(&mut buffer).unwrap();
-                body.push_str()
-                if size < 500 {
+                let mut cbuffer = [0; 500]; //Reads the content by buffers of 500 bytes till it's finished
+                let size = buffer.read(&mut cbuffer).unwrap();
+                body.push_str(str::from_utf8(&cbuffer).unwrap());
+                if size < 500 { //If the BufReader has read less than 500 bytes the request is considered finished
                     break;
                 }
             }
