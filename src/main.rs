@@ -6,7 +6,6 @@
 use std::{
     env,
     str,
-    net::{TcpListener, TcpStream},
     sync::{Arc, RwLock}
 };
 
@@ -31,7 +30,6 @@ fn main() {
         }
     }
     
-    let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
