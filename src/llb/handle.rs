@@ -19,6 +19,7 @@ use super::{
 pub fn handle(mut stream: String, store: Arc<DataBase>) {
     let timestart = Instant::now();
     let dt = String::from("test");
+    println!("Test: {:.2?}", timestart.elapsed());
 
     let timelapse = Instant::now();
     println!("HTTP req reading done: {:.2?}", timestart.elapsed());
