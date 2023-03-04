@@ -4,6 +4,8 @@
 
 //Importing standard libraries
 use std::{
+    io,
+    io::Write,
     env,
     str,
     net::{TcpListener, TcpStream},
@@ -20,6 +22,7 @@ use hermod::llb::{
 fn main() {
     let mut w = 1;  //HTTP server thread count
     let mut deltoken = Arc::new(String::from("token"));
+    let stdin = io::stdin();
 
     let variables = env::vars();    //Gets all environment variables
     for (key, value) in variables.into_iter() { //Cycle through env variables
@@ -43,17 +46,18 @@ fn main() {
     println!("[Hermod] Up and running...");
     println!("[Hermod] HTTP Server threads: {w}");
     println!("[Hermod] Del_Token: {deltoken}");
+
     
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                let store_clone = Arc::clone(&store);
-                pool.execute(|| { handle(stream, store_clone) });    //Sends the job off to the ThreadPool
-            }
-            Err(_) => {
-                println!("[Hermod] Stream error when accepting connection.")
-            }
-        }
+    loop {
+        print!("> ");
+        io::stdout().flush().unwrap();
+        let mut userinput = String::from("");
+        stdin.read_line(&mut userinput);
+        println!("Input: {userinput}");
+
+        let store_clone = Arc::clone(&store);
+        handle(userinput, store_clone);
+        // pool.execute(|| { handle(userinput, store_clone) });    //Sends the job off to the ThreadPool
     }
 
     println!("[Hermod] Shutting down.");

@@ -16,15 +16,14 @@ use super::{
     httpstr::HTTP
 };
 
-pub fn handle(mut stream: TcpStream, store: Arc<DataBase>) {
+pub fn handle(mut stream: String, store: Arc<DataBase>) {
     let timestart = Instant::now();
     let dt = String::from("test");
 
-    let httpreq = HTTP::new(&stream).unwrap();
     let timelapse = Instant::now();
     println!("HTTP req reading done: {:.2?}", timestart.elapsed());
 
-    println!("Status: {}\nHeaders: {:?}\nBody: {}", httpreq.status, httpreq.headers, httpreq.body);
+    // println!("Status: {}\nHeaders: {:?}\nBody: {}", httpreq.status, httpreq.headers, httpreq.body);
 
     // println!("{:?}", String::from_utf8(body).unwrap());
     // println!("{httpheader}");
@@ -49,5 +48,5 @@ pub fn handle(mut stream: TcpStream, store: Arc<DataBase>) {
 
     println!("Query chronometer: {:.2?}", timestart.elapsed());
 
-    stream.write_all(response.as_bytes()).unwrap();
+    // stream.write_all(response.as_bytes()).unwrap();
 }
