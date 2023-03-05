@@ -46,7 +46,6 @@ fn main() {
     println!("[Hermod] Up and running...");
     println!("[Hermod] HTTP Server threads: {w}");
     println!("[Hermod] Del_Token: {deltoken}");
-
     
     loop {
         print!("> ");
