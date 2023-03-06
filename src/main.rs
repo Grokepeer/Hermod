@@ -6,27 +6,26 @@
 use std::{
     io,
     io::Write,
-    env,
-    str,
-    net::{TcpListener, TcpStream},
-    sync::{Arc, RwLock}
+    net::TcpStream,
+    sync::Arc
 };
 
 //Importing libraries structs and functions
 use hermod::llb::{
     datastr::DataBase,
-    threads::ThreadPool,
+    // threads::ThreadPool,
     handle::handle
 };
 
 fn main() {
-    let w = option_env!("HTTP_Threads").unwrap_or("1").parse().unwrap();    //HTTP server thread count
+    let w: u8 = option_env!("HTTP_Threads").unwrap_or("1").parse().unwrap();    //HTTP server thread count
     let deltoken = Arc::new(String::from(option_env!("Del_Token").unwrap_or("token")));
     let apiversion = option_env!("CARGO__VERSION").unwrap_or("0.0.1");
     let version = option_env!("CARGO_PKG_VERSION").unwrap_or("0.0.1");
     let stdin = io::stdin();
     
-    let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
+    let mut stream = TcpStream::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
+    // let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store = Arc::new(DataBase::new());
@@ -43,11 +42,15 @@ fn main() {
         print!("> ");
         io::stdout().flush().unwrap();
         let mut userinput = String::from("");
-        stdin.read_line(&mut userinput);
+        stdin.read_line(&mut userinput).unwrap();
         println!("Input: {userinput}");
 
         let store_clone = Arc::clone(&store);
-        handle(userinput, store_clone);
+        match handle(userinput, store_clone) {
+            0 => continue,
+            1 => break,
+            _ => println!("Error occured")
+        }
         // pool.execute(|| { handle(userinput, store_clone) });    //Sends the job off to the ThreadPool
     }
 
