@@ -13,7 +13,6 @@ use super::{
         DataTable,
         KeyData
     },
-    httpstr::HTTP
 };
 
 pub fn handle(mut stream: String, store: Arc<DataBase>) {

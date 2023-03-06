@@ -20,32 +20,24 @@ use hermod::llb::{
 };
 
 fn main() {
-    let mut w = 1;  //HTTP server thread count
-    let mut deltoken = Arc::new(String::from("token"));
+    let w = option_env!("HTTP_Threads").unwrap_or("1").parse().unwrap();    //HTTP server thread count
+    let deltoken = Arc::new(String::from(option_env!("Del_Token").unwrap_or("token")));
+    let apiversion = option_env!("CARGO__VERSION").unwrap_or("0.0.1");
+    let version = option_env!("CARGO_PKG_VERSION").unwrap_or("0.0.1");
     let stdin = io::stdin();
-
-    let variables = env::vars();    //Gets all environment variables
-    for (key, value) in variables.into_iter() { //Cycle through env variables
-        if key == "HTTP_Threads" {
-            w = value.parse().unwrap()
-        }
-        if key == "Del_Token" {
-            deltoken = Arc::new(value)
-        }
-    }
     
-    let listener = TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host");
     let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store = Arc::new(DataBase::new());
-    println!("Get this: {}", store.get_table("_basedb").unwrap().get_record("_base").unwrap().data.read().unwrap());
+    // println!("Get this: {}", store.get_table("_basedb").unwrap().get_record("_base").unwrap().data.read().unwrap());
     store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
-    println!("This is: {}", store.get_table("_basedb").unwrap().get_record("testkey").unwrap().data.read().unwrap());
+    // println!("This is: {}", store.get_table("_basedb").unwrap().get_record("testkey").unwrap().data.read().unwrap());
     
-    println!("[Hermod] Up and running...");
+    println!("[Hermod] Hermod v{version}, API v{apiversion}");
     println!("[Hermod] HTTP Server threads: {w}");
     println!("[Hermod] Del_Token: {deltoken}");
+    println!("[Hermod] Hermod is starting up... Wait for the CLI to start");
     
     loop {
         print!("> ");
