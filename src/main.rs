@@ -5,28 +5,25 @@
 //Importing standard libraries
 use std::{
     thread,
-    io,
-    io::{Read, Write},
-    net::{TcpStream, TcpListener},
+    net::{TcpListener},
     sync::Arc
 };
 
 //Importing libraries structs and functions
 use hermod::llb::{
     datastr::DataBase,
-    // threads::ThreadPool,
     handle::handle
 };
 
+pub 
+
 fn main() {
-    let w: u8 = option_env!("HTTP_Threads").unwrap_or("1").parse().unwrap();    //HTTP server thread count
+    let w: u8 = option_env!("HTTP_Threads").unwrap_or("1").parse().unwrap_or(1);    //HTTP server thread count
     let deltoken = Arc::new(String::from(option_env!("Del_Token").unwrap_or("token")));
     let apiversion = option_env!("CARGO__VERSION").unwrap_or("0.0.1");
     let version = option_env!("CARGO_PKG_VERSION").unwrap_or("0.0.1");
-    let stdin = io::stdin();
     
-    let mut listener = Arc::new(TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host"));
-    // let pool = ThreadPool::new(w);  //New ThreadPool requested with worker count N
+    let listener = Arc::new(TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host"));
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store = Arc::new(DataBase::new());
@@ -41,24 +38,9 @@ fn main() {
     
     let mut handles = Vec::new();
     for stream in listener.incoming() {
-        handles.push(thread::spawn(|| handle(stream.unwrap())));
+        let store_clone = Arc::clone(&store);
+        handles.push(thread::spawn(|| handle(stream.unwrap(), store_clone)));
     }
-
-    // loop {
-    //     print!("> ");
-    //     io::stdout().flush().unwrap();
-    //     let mut userinput = String::from("");
-    //     stdin.read_line(&mut userinput).unwrap();
-    //     println!("Input: {userinput}");
-
-    //     let store_clone = Arc::clone(&store);
-    //     match handle(userinput, store_clone) {
-    //         0 => continue,
-    //         1 => break,
-    //         _ => println!("Error occured")
-    //     }
-    //     /pool.execute(|| { handle(userinput, store_clone) });    //Sends the job off to the ThreadPool
-    // }
 
     println!("[Hermod] Shutting down.");
 }

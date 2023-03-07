@@ -1,36 +1,43 @@
 //Importing standard libraries
 use std::{
+    thread,
     io::{prelude::*, BufReader},
+    time,
     time::Instant,
-    sync::{Arc},
-    net::TcpStream,
+    sync::Arc,
+    net::{TcpStream, Shutdown},
 };
 
 use super::{
     datastr::DataBase
 };
-// , store: Arc<DataBase>
-pub fn handle(mut stream: TcpStream) -> u8 {
+
+pub fn handle(mut stream: TcpStream, _store: Arc<DataBase>) -> u8 {
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
-    // let dt = String::from("test");
 
-    stream.write("Successfully connected to Hermod. Opening CLI...\n\n[Hermod]> ".as_bytes()).unwrap();
+    stream.write("Welcome to Hermod v0.2.0\n\n[Hermod]> ".as_bytes()).unwrap();
     println!("Started handle in {:.3?}", timestart.elapsed());
 
     loop {
-        let mut linebuf = String::from("");
-        buffer.read_line(&mut linebuf);
+        let mut query = String::from("");
+        buffer.read_line(&mut query).unwrap();
         let chrono = Instant::now();
-        println!("Got this: {}", linebuf);
+        println!("Got this: {}", query);
+
+        if query.starts_with("exit") {
+            break;
+        } else if query.starts_with("wait") {
+            thread::sleep(time::Duration::from_millis(8000));
+        }
 
         let response = format!("{}{:.3?}{}", "\nQuery completed in ", chrono.elapsed(), "\n\n");
-        println!("{}", response);
-        stream.write(response.as_bytes());
-        stream.write("[Hermod]> ".as_bytes());
+        stream.write(response.as_bytes()).unwrap();
+        stream.write("[Hermod]> ".as_bytes()).unwrap();
     }
 
-    println!("Query chronometer: {:.2?}", timestart.elapsed());
+    println!("Session duration: {:.3?}", timestart.elapsed());
+    stream.shutdown(Shutdown::Read);
 
     return 0;
 }
