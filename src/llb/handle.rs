@@ -9,21 +9,24 @@ use std::{
 };
 
 use super::{
-    datastr::DataBase
+    datastr::{DataBase, PkgData}
 };
 
-pub fn handle(mut stream: TcpStream, _store: Arc<DataBase>) -> u8 {
+pub fn handle(mut stream: TcpStream, id: &u8, store: Arc<DataBase>, pkg: Arc<PkgData>) {
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
     stream.write("Welcome to Hermod v0.2.0\n\n[Hermod]> ".as_bytes()).unwrap();
-    println!("Started handle in {:.3?}", timestart.elapsed());
+    println!("Started {id} handle in {:.3?}", timestart.elapsed());
 
     loop {
         let mut query = String::from("");
-        buffer.read_line(&mut query).unwrap();
+        match buffer.read_line(&mut query) {
+            Err(_) => break,
+            _ => {}
+        };
+
         let chrono = Instant::now();
-        println!("Got this: {}", query);
 
         if query.starts_with("exit") {
             break;
@@ -36,8 +39,7 @@ pub fn handle(mut stream: TcpStream, _store: Arc<DataBase>) -> u8 {
         stream.write("[Hermod]> ".as_bytes()).unwrap();
     }
 
-    println!("Session duration: {:.3?}", timestart.elapsed());
+    stream.write("\nSuccessfully dropping connection to Hermod...".as_bytes()).unwrap();
+    println!("Closed {id} handle in {:.3?}", timestart.elapsed());
     stream.shutdown(Shutdown::Read);
-
-    return 0;
 }

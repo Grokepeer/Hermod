@@ -11,17 +11,16 @@ use std::{
 
 //Importing libraries structs and functions
 use hermod::llb::{
-    datastr::DataBase,
+    datastr::{DataBase, PkgData},
     handle::handle
 };
 
-pub 
-
 fn main() {
-    let w: u8 = option_env!("HTTP_Threads").unwrap_or("1").parse().unwrap_or(1);    //HTTP server thread count
-    let deltoken = Arc::new(String::from(option_env!("Del_Token").unwrap_or("token")));
-    let apiversion = option_env!("CARGO__VERSION").unwrap_or("0.0.1");
-    let version = option_env!("CARGO_PKG_VERSION").unwrap_or("0.0.1");
+    let pkg = Arc::new({ PkgData {
+        pkgv: String::from(option_env!("CARGO_PKG_VERSION").unwrap_or("0.0.1")),
+        apiv: String::from(option_env!("CARGO__VERSION").unwrap_or("0.0.1")),
+        deltoken: String::from(option_env!("Del_Token").unwrap_or("token"))
+    }});
     
     let listener = Arc::new(TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host"));
     
@@ -31,15 +30,21 @@ fn main() {
     store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
     // println!("This is: {}", store.get_table("_basedb").unwrap().get_record("testkey").unwrap().data.read().unwrap());
     
-    println!("[Hermod] Hermod v{version}, API v{apiversion}");
-    println!("[Hermod] HTTP Server threads: {w}");
-    println!("[Hermod] Del_Token: {deltoken}");
-    println!("[Hermod] Hermod is starting up... Wait for the CLI to start");
+    println!("[Hermod] Hermod v{}, API v{}", pkg.pkgv, pkg.apiv);
+    println!("[Hermod] Del_Token: {}", pkg.deltoken);
+    println!("[Hermod] Hermod is starting up...");
     
     let mut handles = Vec::new();
+    let mut id = Arc::new(Mutex::);
     for stream in listener.incoming() {
+        id += 1;
+        let pkg_clone = Arc::clone(&pkg);
         let store_clone = Arc::clone(&store);
-        handles.push(thread::spawn(|| handle(stream.unwrap(), store_clone)));
+        handles.push(thread::spawn(|| handle(stream.unwrap(), &id, store_clone, pkg_clone)));
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
     }
 
     println!("[Hermod] Shutting down.");

@@ -4,6 +4,12 @@ use std::{
     sync::{Arc, RwLock}
 };
 
+pub struct PkgData {
+    pub pkgv: String,
+    pub apiv: String,
+    pub deltoken: String
+}
+
 //Data structure used in the DB, points to another space in the heap that contains all data paired with the key in a String
 pub struct KeyData {
     pub key: String,
