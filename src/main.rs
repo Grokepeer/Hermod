@@ -35,12 +35,13 @@ fn main() {
     println!("[Hermod] Hermod is starting up...");
     
     let mut handles = Vec::new();
-    let mut id = Arc::new(Mutex::);
+    let mut counter = 0;
     for stream in listener.incoming() {
-        id += 1;
+        counter += 1;
+        let id = counter;
         let pkg_clone = Arc::clone(&pkg);
         let store_clone = Arc::clone(&store);
-        handles.push(thread::spawn(|| handle(stream.unwrap(), &id, store_clone, pkg_clone)));
+        handles.push(thread::spawn(move || handle(stream.unwrap(), id, store_clone, pkg_clone)));
     }
 
     for handle in handles {

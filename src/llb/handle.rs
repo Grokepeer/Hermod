@@ -12,12 +12,12 @@ use super::{
     datastr::{DataBase, PkgData}
 };
 
-pub fn handle(mut stream: TcpStream, id: &u8, store: Arc<DataBase>, pkg: Arc<PkgData>) {
+pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgData>) {
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
     stream.write("Welcome to Hermod v0.2.0\n\n[Hermod]> ".as_bytes()).unwrap();
-    println!("Started {id} handle in {:.3?}", timestart.elapsed());
+    println!("Started handle id.{id} in {:.3?}", timestart.elapsed());
 
     loop {
         let mut query = String::from("");
@@ -39,7 +39,7 @@ pub fn handle(mut stream: TcpStream, id: &u8, store: Arc<DataBase>, pkg: Arc<Pkg
         stream.write("[Hermod]> ".as_bytes()).unwrap();
     }
 
-    stream.write("\nSuccessfully dropping connection to Hermod...".as_bytes()).unwrap();
-    println!("Closed {id} handle in {:.3?}", timestart.elapsed());
+    stream.write("\nSuccessfully dropping connection to Hermod...".as_bytes()).unwrap_or(0);
+    println!("Closed handle id.{id} in {:.3?}", timestart.elapsed());
     stream.shutdown(Shutdown::Read);
 }
