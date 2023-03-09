@@ -1,15 +1,14 @@
 //Importing standard libraries
 use std::{
-    thread,
     io::{prelude::*, BufReader},
-    time,
     time::Instant,
     sync::Arc,
     net::{TcpStream, Shutdown},
 };
 
 use super::{
-    datastr::{DataBase, PkgData}
+    datastr::{DataBase, PkgData},
+    handleops::{getop, setop, delop, supercreate, superdelete}
 };
 
 pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgData>) {
@@ -17,7 +16,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
     stream.write("Welcome to Hermod v0.2.0\n\n[Hermod]> ".as_bytes()).unwrap();
-    println!("Started handle id.{id} in {:.3?}", timestart.elapsed());
+    println!("Started handle ID.{id} in {:.3?}", timestart.elapsed());
 
     loop {
         let mut query = String::from("");
@@ -26,20 +25,29 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
             _ => {}
         };
 
-        let chrono = Instant::now();
+        let chrono = Instant::now();    //Starts the query
 
-        if query.starts_with("exit") {
-            break;
-        } else if query.starts_with("wait") {
-            thread::sleep(time::Duration::from_millis(8000));
-        }
+        let query = query.replace("\n", "");
+        let query: Vec<_> = query.split(" ").collect();
 
-        let response = format!("{}{:.3?}{}", "\nQuery completed in ", chrono.elapsed(), "\n\n");
-        stream.write(response.as_bytes()).unwrap();
+        match query[0] {
+            "get" => getop(query, &store, &stream),
+            "set" => setop(query, &store, &stream),
+            "del" => delop(query, &store, &stream),
+            "super" => superhandle(query, &store, &stream),
+            "exit" => break,
+            _ => {}
+        };
+
+        let querytime = format!("{}{:.3?}{}", "\nQuery completed in ", chrono.elapsed(), "\n\n");   //End the query
+        stream.write(querytime.as_bytes()).unwrap();
         stream.write("[Hermod]> ".as_bytes()).unwrap();
     }
 
-    stream.write("\nSuccessfully dropping connection to Hermod...".as_bytes()).unwrap_or(0);
-    println!("Closed handle id.{id} in {:.3?}", timestart.elapsed());
+    stream.write("\nSuccessfully dropping the connection to Hermod...".as_bytes()).unwrap_or(0);
+    println!("Closed handle ID.{id} after {:.3?}", timestart.elapsed());
     stream.shutdown(Shutdown::Read);
+}
+
+fn superhandle (query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
 }
