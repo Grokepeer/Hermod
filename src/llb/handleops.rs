@@ -27,7 +27,7 @@ pub fn getop(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
 }
 
 pub fn setop(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
-    if query.len() == 6 && query[2] == "from" && query[4] == "to" {
+    if query.len() == 6 && query[2] == "in" && query[4] == "to" {
         match store.get_table(query[3]) {
             Ok(table) => match table.create_record(query[1], query[5]) {
                 0 => stream.write("KeyData set successfully".as_bytes()),
