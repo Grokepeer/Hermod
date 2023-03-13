@@ -131,36 +131,37 @@ impl DataTable {
 
     //This function looks for a record in the table it was called upon
     //Returns 1 if the record exists, 0 if it doesn't and -1 if the function couldn't complete the operation correctly
-    fn is_record(&self, recordkey: &str) -> i8 {
+    fn is_record(&self, recordkey: &str) -> (i8, u32) {
         match self.table.read() {
             Ok(table) => {
+                let mut x = 0;
                 for record in table.iter() {
                     if record.key.as_str() == recordkey {
-                        return 1
+                        return (1, x)
                     }
+                    x += 1;
                 }
             }
             Err(_) => {
                 println!("[Hermod] Unable to get table.read() access");
-                return -1
+                return (-1, 0)
             }
         }
         
-        return 0
+        return (0, 0)
     }
 
     //This function creates a record in the table that it was called upon
     //Returns 0 if the operation was successful, 1 if the record already existed, -1 if the function couldn't complete properly
     pub fn create_record(&self, recordkey: &str, recordata: &str) -> i8 {
         match self.is_record(recordkey) {
-            0 => {
+            (0, x) => {
                 match self.table.write() {
                     Ok(mut table) => {
                         table.push(Arc::new({ KeyData {
                             key: String::from(recordkey),
                             data: RwLock::new(String::from(recordata))
                         }}));
-                        
                         return 0
                     }
                     Err(_) => {
@@ -169,7 +170,25 @@ impl DataTable {
                     }
                 }
             }
-            r => return r
+            (r, x) => return r
+        }
+    }
+
+    pub fn delete_record(&self, recordkey: &str) -> i8 {
+        match self.is_record(recordkey) {
+            (1, x) => {
+                match self.table.write() {
+                    Ok(mut table) => {
+                        table.remove(x as usize);
+                        return 0
+                    }
+                    Err(_) => {
+                        println!("[Hermod] Unable to get table.write() access");
+                        return -1
+                    }
+                }
+            }
+            (r, x) => return r
         }
     }
 }
