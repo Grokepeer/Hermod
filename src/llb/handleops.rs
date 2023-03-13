@@ -44,10 +44,10 @@ pub fn setop(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
 pub fn delop(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
     if query.len() == 4 && query[2] == "from" {
         match store.get_table(query[3]) {
-            Ok(table) => match table.create_record(query[1], query[5]) {
-                0 => stream.write("KeyData set successfully".as_bytes()),
-                1 => stream.write("KeyData already set".as_bytes()),
-                _ => stream.write("Unable to create KeyData".as_bytes())
+            Ok(table) => match table.delete_record(query[1]) {
+                0 => stream.write("KeyData deleted successfully".as_bytes()),
+                1 => stream.write("KeyData doesn't exists".as_bytes()),
+                _ => stream.write("Unable to delete KeyData".as_bytes())
             },
             Err(_) => stream.write("No DataTable with the given name".as_bytes())
         };
