@@ -188,7 +188,7 @@ impl DataTable {
                     }
                 }
             }
-            (r, x) => return r
+            (r, x) => return 1
         }
     }
 }
