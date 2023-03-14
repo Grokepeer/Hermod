@@ -8,7 +8,7 @@ use std::{
 
 use super::{
     datastr::{DataBase, PkgData},
-    handleops::{getop, setop, delop, supercreate, superdelete}
+    handleops::{getop, setop, delop, getlen, supercreate, superdelete}
 };
 
 pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgData>) {
@@ -50,4 +50,12 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
 }
 
 fn superhandle (query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
+    if query.len() > 1 {
+        match query[1] {
+            "getlen" => getlen(query, &store, &stream),
+            _ => {}
+        };
+    } else {
+        stream.write("No operation specified".as_bytes());
+    }
 }

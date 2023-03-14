@@ -56,6 +56,20 @@ pub fn delop(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
     }
 }
 
+pub fn getlen(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
+    if query.len() == 3 {
+        match store.get_table(query[2]) {
+            Ok(table) => match table.table.read() {
+                Ok(vec) => stream.write(vec.len().to_string().as_bytes()),
+                Err(_) => stream.write("Unable to access table".as_bytes())
+            },
+            Err(_) => stream.write("No DataTable with the given name".as_bytes())
+        };
+    } else {
+        stream.write("Invalid parameters".as_bytes());
+    }
+}
+
 pub fn supercreate(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
 
 }
