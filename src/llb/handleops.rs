@@ -1,12 +1,12 @@
 //Importing standard libraries
 use std::{
-    io::{Write},
-    net::{TcpStream},
-    sync::{Arc}
+    io::Write,
+    net::TcpStream,
+    sync::Arc
 };
 
 use super::{
-    datastr::{DataBase}
+    datastr::DataBase
 };
 
 pub fn getop(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {

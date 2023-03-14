@@ -30,6 +30,8 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
         let query = query.replace("\n", "");
         let query: Vec<_> = query.split(" ").collect();
 
+        println!("{:?}", query);
+
         match query[0] {
             "get" => getop(query, &store, &stream),
             "set" => setop(query, &store, &stream),

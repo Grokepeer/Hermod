@@ -1,4 +1,4 @@
-# Hermod In-Memory DB
+# Hermod In-Memory DB Host
 
 ### Hermod High Performance In-Memory Database System
 
