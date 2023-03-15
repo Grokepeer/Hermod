@@ -15,7 +15,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
-    stream.write("Welcome to Hermod v0.2.0\n\n[Hermod]> ".as_bytes()).unwrap();
+    stream.write("Welcome to Hermod v0.2.0\n> ".as_bytes()).unwrap();
     println!("Started handle ID.{id} in {:.3?}", timestart.elapsed());
 
     loop {
@@ -29,8 +29,9 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
 
         let query = query.replace("\n", "");
         let query: Vec<_> = query.split(" ").collect();
+        let testing = String::from(query[0]);
 
-        println!("{:?}", query);
+        // println!("{:?}", query);
 
         match query[0] {
             "get" => getop(query, &store, &stream),
@@ -41,14 +42,15 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
             _ => {}
         };
 
-        let querytime = format!("{}{:.3?}{}", "\nQuery completed in ", chrono.elapsed(), "\n\n");   //End the query
-        stream.write(querytime.as_bytes()).unwrap();
-        stream.write("[Hermod]> ".as_bytes()).unwrap();
+        if true {
+            let querytime = format!("{}{:.3?}{}", "\nQuery completed in ", chrono.elapsed(), "\n> ");   //End the query
+            stream.write(querytime.as_bytes()).unwrap_or(0);
+        }
     }
 
     stream.write("\nSuccessfully dropping the connection to Hermod...".as_bytes()).unwrap_or(0);
     println!("Closed handle ID.{id} after {:.3?}", timestart.elapsed());
-    stream.shutdown(Shutdown::Read);
+    stream.shutdown(Shutdown::Read).unwrap_or(());
 }
 
 fn superhandle (query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
@@ -58,6 +60,6 @@ fn superhandle (query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream)
             _ => {}
         };
     } else {
-        stream.write("No operation specified".as_bytes());
+        stream.write("No operation specified".as_bytes()).unwrap_or(0);
     }
 }

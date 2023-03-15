@@ -155,7 +155,7 @@ impl DataTable {
     //Returns 0 if the operation was successful, 1 if the record already existed, -1 if the function couldn't complete properly
     pub fn create_record(&self, recordkey: &str, recordata: &str) -> i8 {
         match self.is_record(recordkey) {
-            (0, x) => {
+            (0, _x) => {
                 match self.table.write() {
                     Ok(mut table) => {
                         table.push(Arc::new({ KeyData {
@@ -170,7 +170,7 @@ impl DataTable {
                     }
                 }
             }
-            (r, x) => return r
+            (r, _x) => return r
         }
     }
 
@@ -188,7 +188,7 @@ impl DataTable {
                     }
                 }
             }
-            (r, x) => return 1
+            (_r, _x) => return 1
         }
     }
 }
