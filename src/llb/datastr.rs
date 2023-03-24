@@ -174,6 +174,8 @@ impl DataTable {
         }
     }
 
+    //This function deletes a record from the table that it was called upon
+    //Returns 0 if the operation was successfull, 1 if the record didn't exist, -1 if the function couldn't complete properly
     pub fn delete_record(&self, recordkey: &str) -> i8 {
         match self.is_record(recordkey) {
             (1, x) => {

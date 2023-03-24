@@ -29,7 +29,6 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
 
         let query = query.replace("\n", "");
         let query: Vec<_> = query.split(" ").collect();
-        let testing = String::from(query[0]);
 
         // println!("{:?}", query);
 

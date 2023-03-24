@@ -30,8 +30,7 @@ pub fn setop(query: Vec<&str>, store: &Arc<DataBase>, mut stream: &TcpStream) {
     if query.len() == 6 && query[2] == "in" && query[4] == "to" {
         match store.get_table(query[3]) {
             Ok(table) => match table.create_record(query[1], query[5]) {
-                // 0 => stream.write("KeyData set successfully".as_bytes()).unwrap_or(0),
-                0 => 0,
+                0 => stream.write("KeyData set successfully".as_bytes()).unwrap_or(0),
                 1 => stream.write("KeyData already set".as_bytes()).unwrap_or(0),
                 _ => stream.write("Unable to create KeyData".as_bytes()).unwrap_or(0)
             },
