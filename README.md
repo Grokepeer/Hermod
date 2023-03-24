@@ -1,7 +1,7 @@
 # Hermod In-Memory DB Host
 
 ### Hermod High Performance In-Memory Database System
-Hermod is an In-Memory database management system that was designed for YBD. It uses a custom multi-threaded http server. Stores data in a key-based table that is optimized by an ANN to prioritize data based on access patterns.
+Hermod is an In-Memory database management system that was designed for YBD. It uses a custom multi-threaded TCP handle server. Stores data in a key-based table that is optimized by an ANN to prioritize data based on access patterns.
 
 ## Docker Installation
 ```
