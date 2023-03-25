@@ -10,12 +10,9 @@ services:
     image: grokepeer/hermod:0.1.2
     ports:
       - 2088:2088
-    environment:
-      - Del_Token=token
 ```
 
 Once the service is started and printed "[Hermod] Up and running..." the DB is ready to receive requests.
-In case env variables are not provided or they are unacceptable, Hermod will take the defaults ("token" token)
 
 ## API
 To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088. Once the connection is established successfully the host will send:  
@@ -28,13 +25,28 @@ With the first v0.0.0 being the host version and the second being the API versio
 #### Security note:  
 The connection between host and client **is not encrypted** so all data shared between them is interceptable by any entity that has access to the network of the machines involved.
 
-### GET formatting:  
+### Commands formatting:  
 ```
 get [data-key] from [tablename]
+
+del [data-key] from [tablename]
+
+set [data-key] in [tablename] to [data]
+
+sup getlen [tablename]
 ```
 
 #### Notes:  
-- The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB
+- The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces
+- *Tablename* is a unique ID for each table, it cannot contain spaces
+
+### Response formatting:  
+```
+{xxxxxxxxxxxx}[data]
+```
+
+#### Notes:  
+- *x* is a 4 to 12 digits number that is the query execution time in nano seconds
 
 ## ANN details
 
