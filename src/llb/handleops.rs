@@ -2,6 +2,7 @@
 use std::{
     io::Write,
     net::TcpStream,
+    time::Instant,
     sync::Arc
 };
 
@@ -10,6 +11,8 @@ use super::{
 };
 
 pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
+    let timestart = Instant::now();
+
     let l = match query.find(" ") {
         Some(n) => n + 1,
         _ => return,
@@ -17,21 +20,28 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
 
     if &query[l..l + 4] == "from" {
         match store.get_table(&query[l + 5..query.len() - 1]) {
-            Ok(table) => match table.get_record(&query[..l - 1]) {
-                Ok(keydata) => match keydata.data.read() {
-                    Ok(data) => {
-                        // stream.write(data.as_bytes()).unwrap_or(0);
-                        0
+            Ok(table) => {
+                println!("Table here: {:.2?}", timestart.elapsed());
+                match table.get_record(&query[..l - 1]) {
+                    Ok(keydata) => {
+                        println!("Record here: {:.2?}", timestart.elapsed());
+                        match keydata.data.read() {
+                            Ok(data) => {
+                                println!("Data here: {:.2?}", timestart.elapsed());
+                                // stream.write(data.as_bytes()).unwrap_or(0);
+                                0
+                            },
+                            Err(_) => 0
+                            // stream.write("Unable to access Data".as_bytes()).unwrap_or(0)
+                        };
                     },
-                    Err(_) => 0
-                    // stream.write("Unable to access Data".as_bytes()).unwrap_or(0)
-                },
-                Err(_) => 0
-                // stream.write("No KeyData with the given key".as_bytes()).unwrap_or(0)
+                    Err(_) => ()
+                    // stream.write("No KeyData with the given key".as_bytes()).unwrap_or(0)
+                };
             },
-            Err(_) => 0
+            Err(_) => ()
             // stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
-        };
+        }
     } else {
         stream.write("Invalid parameters".as_bytes()).unwrap_or(0);
     }

@@ -33,6 +33,10 @@ del [data-key] from [tablename]
 
 set [data-key] in [tablename] to [data]
 
+sup create [tablename]
+
+sup delete [tablename]
+
 sup getlen [tablename]
 ```
 
