@@ -38,16 +38,16 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
 
             match op {
                 "get" => getop(nxt, &store, &stream),
-                "set" => setop(query, &store, &stream),
+                "set" => setop(nxt, &store, &stream),
                 "del" => delop(query, &store, &stream),
-                "sup" => superhandle(query, &store, &stream),
+                "sup" => superhandle(nxt, &store, &stream),
                 "ext" => break,
                 _ => {}
             };
         }
 
         if true {
-            let querytime = format!("{}{:5?}{}", "{", chrono.elapsed().as_nanos(), "}");   //End the query
+            let querytime = format!("{}{:12?}{}", "{", chrono.elapsed().as_nanos(), "}");   //End the query
             stream.write(querytime.as_bytes()).unwrap_or(0);
         }
     }
@@ -57,13 +57,6 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     stream.shutdown(Shutdown::Read).unwrap_or(());
 }
 
-fn superhandle (query: String, store: &Arc<DataBase>, mut stream: &TcpStream) {
-    // if query.len() > 1 {
-    //     match query[1] {
-    //         "getlen" => getlen(query, &store, &stream),
-    //         _ => {}
-    //     };
-    // } else {
-    //     stream.write("No operation specified".as_bytes()).unwrap_or(0);
-    // }
+fn superhandle (query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
+    getlen(query, &store, &stream);
 }
