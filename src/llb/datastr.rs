@@ -1,7 +1,8 @@
 //Importing standard libraries
 use std::{
     str,
-    sync::{Arc, RwLock}
+    sync::{Arc, RwLock},
+    mem::size_of_val,
 };
 
 pub struct PkgData {
@@ -12,7 +13,7 @@ pub struct PkgData {
 
 //Data structure used in the DB, points to another space in the heap that contains all data paired with the key in a String
 pub struct KeyData {
-    pub key: String,
+    pub key: [u8; 20],
     pub data: RwLock<String>
 }
 
@@ -115,7 +116,10 @@ impl DataTable {
         match self.table.read() {
             Ok(table) => {
                 for record in table.iter() {
-                    if record.key.as_str() == recordkey {
+                    if record.key == recordkey.as_bytes() {
+                        println!("Address: {:p}", record);
+                        println!("Address key: {:?}", record.key);
+                        println!("Address data: {}", size_of_val(&*record.data.read().unwrap()));
                         return Ok(Arc::clone(record))
                     }
                 }
@@ -136,7 +140,7 @@ impl DataTable {
             Ok(table) => {
                 let mut x = 0;
                 for record in table.iter() {
-                    if record.key.as_str() == recordkey {
+                    if record.key == recordkey.as_bytes() {
                         return (1, x)
                     }
                     x += 1;
@@ -154,12 +158,18 @@ impl DataTable {
     //This function creates a record in the table that it was called upon
     //Returns 0 if the operation was successful, 1 if the record already existed, -1 if the function couldn't complete properly
     pub fn create_record(&self, recordkey: &str, recordata: &str) -> i8 {
+        let mut byteskey = [0u8; 20];
+        for i in 0..recordkey.len() {
+            byteskey[i as usize] = recordkey.as_bytes()[i as usize];
+        }
+
+        println!("Set key: {:?}", byteskey);
         match self.is_record(recordkey) {
             (0, _x) => {
                 match self.table.write() {
                     Ok(mut table) => {
                         table.push(Arc::new({ KeyData {
-                            key: String::from(recordkey),
+                            key: byteskey,
                             data: RwLock::new(String::from(recordata))
                         }}));
                         return 0

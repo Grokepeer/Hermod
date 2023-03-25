@@ -15,10 +15,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
-    {
-        let conup = format!("Hermod - Connection established (v{}, v{})", pkg.pkgv, pkg.apiv);
-        stream.write(conup.as_bytes()).unwrap();
-    }
+    stream.write(format!("Hermod - Connection established (v{}, v{})", pkg.pkgv, pkg.apiv).as_bytes()).unwrap();
     println!("Started handle ID.{id} in {:.3?}", timestart.elapsed());
 
     loop {
@@ -46,10 +43,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
             };
         }
 
-        if true {
-            let querytime = format!("{}{:12?}{}", "{", chrono.elapsed().as_nanos(), "}");   //End the query
-            stream.write(querytime.as_bytes()).unwrap_or(0);
-        }
+        stream.write(format!("{}{:12?}{}", "{", chrono.elapsed().as_nanos(), "}").as_bytes()).unwrap_or(0);
     }
 
     stream.write("\nDropping the connection to Hermod...".as_bytes()).unwrap_or(0);

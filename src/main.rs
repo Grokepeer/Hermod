@@ -26,14 +26,12 @@ fn main() {
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store = Arc::new(DataBase::new());
-    // println!("Get this: {}", store.get_table("_basedb").unwrap().get_record("_base").unwrap().data.read().unwrap());
     store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
-    // println!("This is: {}", store.get_table("_basedb").unwrap().get_record("testkey").unwrap().data.read().unwrap());
     
     println!("[Hermod] Hermod v{}, API v{}", pkg.pkgv, pkg.apiv);
     println!("[Hermod] Del_Token: {}", pkg.deltoken);
     println!("[Hermod] Hermod is starting up...");
-    
+
     let mut handles = Vec::new();
     let mut counter = 0;
     for stream in listener.incoming() {
@@ -42,6 +40,7 @@ fn main() {
         let pkg_clone = Arc::clone(&pkg);
         let store_clone = Arc::clone(&store);
         handles.push(thread::spawn(move || handle(stream.unwrap(), id, store_clone, pkg_clone)));
+        break;
     }
 
     for handle in handles {
