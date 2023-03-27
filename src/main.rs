@@ -21,6 +21,16 @@ fn main() {
         apiv: String::from(option_env!("CARGO__VERSION").unwrap_or("0.0.1")),
         deltoken: String::from(option_env!("Del_Token").unwrap_or("token"))
     }});
+
+    let mut vec: Vec<Arc<[u8; 30]>> = Vec::new();
+    vec.push(Arc::new([1; 30]));
+    vec.push(Arc::new([2; 30]));
+    println!("Vec1: {:p},\nVec2: {:p}\n\n", &vec[0], &vec[1]);
+
+    let mut vec: Vec<[u8; 30]> = Vec::new();
+    vec.push([1; 30]);
+    vec.push([2; 30]);
+    println!("Vec1: {:p},\nVec2: {:p}", &vec[0], &vec[1]);
     
     let listener = Arc::new(TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host"));
     

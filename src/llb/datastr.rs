@@ -19,7 +19,7 @@ pub struct KeyData {
 
 pub struct DataTable {
     pub key: String,
-    pub table: RwLock<Vec<KeyData>>
+    pub table: RwLock<Vec<Arc<KeyData>>>
 }
 
 pub struct DataBase {
@@ -112,7 +112,7 @@ impl DataTable {
     //This function looks for a record (given a record key) in the table that the function was called upon and returns a pointer to the record
     //Returns Err("no result") if the record couldn't be found
     //Returns Err("server error") if the function couldn't complete the operation
-    pub fn get_record(&self, recordkey: &str) -> Result<&KeyData, &'static str> {
+    pub fn get_record(&self, recordkey: &str) -> Result<Arc<KeyData>, &'static str> {
         match self.table.read() {
             Ok(table) => {
                 for record in table.iter() {
@@ -120,7 +120,7 @@ impl DataTable {
                         println!("Address: {:p}", record);
                         println!("Address key: {:?}", record.key);
                         println!("Address data: {}", size_of_val(&*record.data.read().unwrap()));
-                        return Ok(record)
+                        return Ok(Arc::clone(record))
                     }
                 }
             }
@@ -140,7 +140,7 @@ impl DataTable {
             Ok(table) => {
                 let mut x = 0;
                 for record in table.iter() {
-                    if record.key == recordkey.as_bytes() {
+                    if compare(recordkey.as_bytes(), &record.key) {
                         return (1, x)
                     }
                     x += 1;
@@ -168,10 +168,10 @@ impl DataTable {
             (0, _x) => {
                 match self.table.write() {
                     Ok(mut table) => {
-                        table.push({ KeyData {
+                        table.push(Arc::new({ KeyData {
                             key: byteskey,
                             data: RwLock::new(String::from(recordata))
-                        }});
+                        }}));
                         return 0
                     }
                     Err(_) => {
