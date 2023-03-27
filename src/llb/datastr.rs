@@ -19,7 +19,7 @@ pub struct KeyData {
 
 pub struct DataTable {
     pub key: String,
-    pub table: RwLock<Vec<Arc<KeyData>>>
+    pub table: RwLock<Vec<KeyData>>
 }
 
 pub struct DataBase {
@@ -39,12 +39,12 @@ impl DataBase {
     //This function looks for a table in the db given a table key and returns a pointer to the table
     //Returns Err("no result") if the table couldn't be found
     //Returns Err("server error") if the function couldn't complete the operation
-    pub fn get_table(&self, tablename: &str) -> Result<Arc<DataTable>, &'static str> {
+    pub fn get_table(&self, tablename: &str, recordname: &str) -> Result<Arc<DataTable>, &'static str> {
         match self.db.read() {
             Ok(db) => {
                 for table in db.iter() {
                     if table.key.as_str() == tablename {
-                        return Ok(Arc::clone(table))
+                        return table.get_record(recordname);
                     }
                 }
             }
@@ -112,7 +112,7 @@ impl DataTable {
     //This function looks for a record (given a record key) in the table that the function was called upon and returns a pointer to the record
     //Returns Err("no result") if the record couldn't be found
     //Returns Err("server error") if the function couldn't complete the operation
-    pub fn get_record(&self, recordkey: &str) -> Result<Arc<KeyData>, &'static str> {
+    pub fn get_record(&self, recordkey: &str) -> Result<&'a str, &'static str> {
         match self.table.read() {
             Ok(table) => {
                 for record in table.iter() {
@@ -120,7 +120,7 @@ impl DataTable {
                         println!("Address: {:p}", record);
                         println!("Address key: {:?}", record.key);
                         println!("Address data: {}", size_of_val(&*record.data.read().unwrap()));
-                        return Ok(Arc::clone(record))
+                        return Ok(record.data.read())
                     }
                 }
             }

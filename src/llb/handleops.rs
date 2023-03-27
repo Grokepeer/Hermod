@@ -21,25 +21,10 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
     println!("Key: {:?}", &query[..l - 1].as_bytes());
 
     if &query[l..l + 4] == "from" {
-        match store.get_table(&query[l + 5..query.len() - 1]) {
-            Ok(table) => {
+        match store.get_table(&query[l + 5..query.len() - 1], &query[..l - 1]) {
+            Ok(data) => {
                 println!("Table here: {:.2?}", timestart.elapsed());
-                match table.get_record(&query[..l - 1]) {
-                    Ok(keydata) => {
-                        println!("Record here: {:.2?}", timestart.elapsed());
-                        match keydata.data.read() {
-                            Ok(data) => {
-                                println!("Data here: {:.2?}", timestart.elapsed());
-                                // stream.write(data.as_bytes()).unwrap_or(0);
-                                0
-                            },
-                            Err(_) => 0
-                            // stream.write("Unable to access Data".as_bytes()).unwrap_or(0)
-                        };
-                    },
-                    Err(_) => ()
-                    // stream.write("No KeyData with the given key".as_bytes()).unwrap_or(0)
-                };
+                println!("Record data: {}", data);
             },
             Err(_) => ()
             // stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
@@ -95,17 +80,17 @@ pub fn delop(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) {
 }
 
 pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
-    match store.get_table(&query[7..query.len() - 1]) {
-        Ok(table) => match table.table.read() {
-            Ok(vec) => {
-                // stream.write(&vec.len().to_be_bytes()).unwrap_or(0);
-                println!("{}", vec.len());
-                0
-            },
-            Err(_) => stream.write("Unable to access table".as_bytes()).unwrap_or(0)
-        },
-        Err(_) => stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
-    };
+    // match store.get_table(&query[7..query.len() - 1]) {
+    //     Ok(table) => match table.table.read() {
+    //         Ok(vec) => {
+    //             // stream.write(&vec.len().to_be_bytes()).unwrap_or(0);
+    //             println!("{}", vec.len());
+    //             0
+    //         },
+    //         Err(_) => stream.write("Unable to access table".as_bytes()).unwrap_or(0)
+    //     },
+    //     Err(_) => stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
+    // };
 }
 
 pub fn supercreate(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) {
