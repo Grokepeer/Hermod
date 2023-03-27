@@ -28,12 +28,11 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
         let chrono = Instant::now();    //Starts the query
 
         if query.len() > 5 {
-            let op = &query[..3];  //Gets operation name (set, del, sup...)
             let nxt = &query[4..];
 
             // println!("{:?}", query);
 
-            match op {
+            match &query[..3] {
                 "get" => getop(nxt, &store, &stream),
                 "set" => setop(nxt, &store, &stream),
                 "del" => delop(query, &store, &stream),

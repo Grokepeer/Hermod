@@ -19,7 +19,7 @@ pub struct KeyData {
 
 pub struct DataTable {
     pub key: String,
-    pub table: RwLock<Vec<Arc<KeyData>>>
+    pub table: RwLock<Vec<KeyData>>
 }
 
 pub struct DataBase {
@@ -112,15 +112,15 @@ impl DataTable {
     //This function looks for a record (given a record key) in the table that the function was called upon and returns a pointer to the record
     //Returns Err("no result") if the record couldn't be found
     //Returns Err("server error") if the function couldn't complete the operation
-    pub fn get_record(&self, recordkey: &str) -> Result<Arc<KeyData>, &'static str> {
+    pub fn get_record(&self, recordkey: &str) -> Result<&KeyData, &'static str> {
         match self.table.read() {
             Ok(table) => {
                 for record in table.iter() {
-                    if record.key == recordkey.as_bytes() {
+                    if compare(recordkey.as_bytes(), &record.key) {
                         println!("Address: {:p}", record);
                         println!("Address key: {:?}", record.key);
                         println!("Address data: {}", size_of_val(&*record.data.read().unwrap()));
-                        return Ok(Arc::clone(record))
+                        return Ok(record)
                     }
                 }
             }
@@ -168,10 +168,10 @@ impl DataTable {
             (0, _x) => {
                 match self.table.write() {
                     Ok(mut table) => {
-                        table.push(Arc::new({ KeyData {
+                        table.push({ KeyData {
                             key: byteskey,
                             data: RwLock::new(String::from(recordata))
-                        }}));
+                        }});
                         return 0
                     }
                     Err(_) => {
@@ -203,4 +203,14 @@ impl DataTable {
             (_r, _x) => return 1
         }
     }
+}
+
+fn compare(slice: &[u8], array: &[u8; 20]) -> bool {
+    for i in 0..slice.len() {
+        if slice[i] != array[i] {
+            return false
+        }
+    }
+
+    return true
 }

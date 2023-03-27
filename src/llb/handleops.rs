@@ -18,6 +18,8 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
         _ => return,
     };
 
+    println!("Key: {:?}", &query[..l - 1].as_bytes());
+
     if &query[l..l + 4] == "from" {
         match store.get_table(&query[l + 5..query.len() - 1]) {
             Ok(table) => {
