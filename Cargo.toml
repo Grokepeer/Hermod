@@ -1,6 +1,6 @@
 [package]
 name = "hermod"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Matteo Minardi <matteo.minardi2014@gmail.com"]
 edition = "2021"
 

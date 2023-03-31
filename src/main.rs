@@ -50,12 +50,12 @@ fn main() {
         let pkg_clone = Arc::clone(&pkg);
         let store_clone = Arc::clone(&store);
         handles.push(thread::spawn(move || handle(stream.unwrap(), id, store_clone, pkg_clone)));
-        break;
+        // break;
     }
 
-    for handle in handles {
-        handle.join().unwrap();
-    }
+    // for handle in handles {
+    //     handle.join().unwrap();
+    // }
 
     println!("[Hermod] Shutting down.");
 }

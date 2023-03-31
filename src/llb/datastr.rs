@@ -39,12 +39,12 @@ impl DataBase {
     //This function looks for a table in the db given a table key and returns a pointer to the table
     //Returns Err("no result") if the table couldn't be found
     //Returns Err("server error") if the function couldn't complete the operation
-    pub fn get_table(&self, tablename: &str, recordname: &str) -> Result<Arc<DataTable>, &'static str> {
+    pub fn get_table(&self, tablename: &str) -> Result<Arc<DataTable>, &'static str> {
         match self.db.read() {
             Ok(db) => {
                 for table in db.iter() {
                     if table.key.as_str() == tablename {
-                        return table.get_record(recordname);
+                        return Ok(Arc::clone(&table));
                     }
                 }
             }
@@ -112,15 +112,15 @@ impl DataTable {
     //This function looks for a record (given a record key) in the table that the function was called upon and returns a pointer to the record
     //Returns Err("no result") if the record couldn't be found
     //Returns Err("server error") if the function couldn't complete the operation
-    pub fn get_record(&self, recordkey: &str) -> Result<&'a str, &'static str> {
+    pub fn get_record(&self, recordkey: &str) -> Result<String, &'static str> {
         match self.table.read() {
             Ok(table) => {
                 for record in table.iter() {
                     if compare(recordkey.as_bytes(), &record.key) {
-                        println!("Address: {:p}", record);
-                        println!("Address key: {:?}", record.key);
-                        println!("Address data: {}", size_of_val(&*record.data.read().unwrap()));
-                        return Ok(record.data.read())
+                        // println!("Address: {:p}", record);
+                        // println!("Address key: {:?}", record.key);
+                        // println!("Address data: {}", size_of_val(&*record.data.read().unwrap()));
+                        return Ok(record.data.read().unwrap().to_string())
                     }
                 }
             }
@@ -163,15 +163,15 @@ impl DataTable {
             byteskey[i as usize] = recordkey.as_bytes()[i as usize];
         }
 
-        println!("Set key: {:?}", byteskey);
+        // println!("Set key: {:?}", byteskey);
         match self.is_record(recordkey) {
             (0, _x) => {
                 match self.table.write() {
                     Ok(mut table) => {
-                        table.push(Arc::new({ KeyData {
+                        table.push({ KeyData {
                             key: byteskey,
                             data: RwLock::new(String::from(recordata))
-                        }}));
+                        }});
                         return 0
                     }
                     Err(_) => {

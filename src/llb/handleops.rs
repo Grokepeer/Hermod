@@ -18,13 +18,16 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
         _ => return,
     };
 
-    println!("Key: {:?}", &query[..l - 1].as_bytes());
+    // println!("Key: {:?}", &query[..l - 1].as_bytes());
 
     if &query[l..l + 4] == "from" {
-        match store.get_table(&query[l + 5..query.len() - 1], &query[..l - 1]) {
-            Ok(data) => {
-                println!("Table here: {:.2?}", timestart.elapsed());
-                println!("Record data: {}", data);
+        match store.get_table(&query[l + 5..query.len() - 1]) {
+            Ok(table) => match table.get_record(&query[..l - 1]) {
+                Ok(data) => {
+                    // println!("Table here: {:.2?}", timestart.elapsed());
+                    // println!("Record data: {}", data);
+                },
+                Err(_) => ()
             },
             Err(_) => ()
             // stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
