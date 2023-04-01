@@ -7,7 +7,7 @@ Hermod is an In-Memory database management system that was designed for YBD. It 
 ```
 services:
   hermod:
-    image: grokepeer/hermod:0.1.2
+    image: grokepeer/hermod:0.2.2
     ports:
       - 2088:2088
 ```
@@ -46,11 +46,12 @@ sup getlen [tablename]
 
 ### Response formatting:  
 ```
-{xxxxxxxxxxxx}[data]
+[data]{xxxxxxxxxxxx zzz}
 ```
 
 #### Notes:  
 - *x* is a 4 to 12 digits number that is the query execution time in nano seconds
+- *z* is an HTTP response code
 
 ## ANN details
 
