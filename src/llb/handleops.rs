@@ -10,12 +10,12 @@ use super::{
     datastr::DataBase
 };
 
-pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
-    let timestart = Instant::now();
+pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
+    // let timestart = Instant::now();
 
     let l = match query.find(" ") {
         Some(n) => n + 1,
-        _ => return,
+        _ => return 400,
     };
 
     // println!("Key: {:?}", &query[..l - 1].as_bytes());
@@ -24,50 +24,54 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
         match store.get_table(&query[l + 5..query.len() - 1]) {
             Ok(table) => match table.get_record(&query[..l - 1]) {
                 Ok(data) => {
+                    stream.write(data.as_bytes()).unwrap_or(0);
+                    return 200;
                     // println!("Table here: {:.2?}", timestart.elapsed());
                     // println!("Record data: {}", data);
                 },
-                Err(_) => ()
+                Err(_) => return 404
             },
-            Err(_) => ()
+            Err(_) => return 404
             // stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
         }
     } else {
-        stream.write("Invalid parameters".as_bytes()).unwrap_or(0);
+        return 400
     }
 }
 
-pub fn setop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
+pub fn setop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
     let l = match query.find(" ") {
         Some(n) => n + 1,
-        _ => return,
+        _ => return 400,
     };
 
     if &query[l..l + 2] == "in" {
         let l2 = match &query[l + 3..].find(" ") {
             Some(n) => l + n + 4,
-            _ => return,
+            _ => return 400,
         };
 
         if &query[l2..l2 + 2] == "to" {
-            match store.get_table(&query[l + 3..l2 - 1]) {
+            return match store.get_table(&query[l + 3..l2 - 1]) {
                 Ok(table) => match table.create_record(&query[..l - 1], &query[l2 + 3..]) {
-                    0 => 0,
+                    0 => 200,
                     // stream.write("KeyData set successfully".as_bytes()).unwrap_or(0),
-                    1 => 0,
+                    1 => 200,
                     // stream.write("KeyData already set".as_bytes()).unwrap_or(0),
-                    _ => 0
+                    _ => 500
                     // stream.write("Unable to create KeyData".as_bytes()).unwrap_or(0)
                 },
-                Err(_) => stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
+                Err(_) => 404
             };
+        } else {
+            return 400
         }
     } else {
-        stream.write("Invalid parameters".as_bytes()).unwrap_or(0);
+        return 400
     }
 }
 
-pub fn delop(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) {
+pub fn delop(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
     // if query.len() == 4 && query[2] == "from" {
     //     match store.get_table(query[3]) {
     //         Ok(table) => match table.delete_record(query[1]) {
@@ -80,9 +84,10 @@ pub fn delop(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) {
     // } else {
     //     stream.write("Invalid parameters".as_bytes()).unwrap_or(0);
     // }
+    return 200
 }
 
-pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
+pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
     // match store.get_table(&query[7..query.len() - 1]) {
     //     Ok(table) => match table.table.read() {
     //         Ok(vec) => {
@@ -94,12 +99,13 @@ pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
     //     },
     //     Err(_) => stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
     // };
+    return 200
 }
 
-pub fn supercreate(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) {
-
+pub fn supercreate(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
+    return 200
 }
 
-pub fn superdelete(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) {
-
+pub fn superdelete(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
+    return 200
 }

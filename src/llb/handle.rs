@@ -27,22 +27,23 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
 
         let chrono = Instant::now();    //Starts the query
 
+        let mut code: u16 = 500;
         if query.len() > 5 {
             let nxt = &query[4..];
 
             // println!("{:?}", query);
 
-            match &query[..3] {
+            code = match &query[..3] {
                 "get" => getop(nxt, &store, &stream),
                 "set" => setop(nxt, &store, &stream),
                 "del" => delop(query, &store, &stream),
                 "sup" => superhandle(nxt, &store, &stream),
                 "ext" => break,
-                _ => {}
+                _ => 400
             };
         }
 
-        stream.write(format!("{}{:12?}{}", "{", chrono.elapsed().as_nanos(), "}").as_bytes()).unwrap_or(0);
+        stream.write(format!("{}{:12?}{}{:3?}{}", "{", chrono.elapsed().as_nanos(), " ", code, "}\n").as_bytes()).unwrap_or(0);
     }
 
     stream.write("\nDropping the connection to Hermod...".as_bytes()).unwrap_or(0);
@@ -50,6 +51,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     stream.shutdown(Shutdown::Read).unwrap_or(());
 }
 
-fn superhandle (query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) {
+fn superhandle (query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
     getlen(query, &store, &stream);
+    return 200
 }
