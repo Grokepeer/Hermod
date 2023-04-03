@@ -12,7 +12,7 @@ services:
       - 2088:2088
 ```
 
-Once the service is started and printed "[Hermod] Up and running..." the DB is ready to receive requests.
+Once the service is started and printed "Up and running..." the DB is ready to receive requests.
 
 ## API
 To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088. Once the connection is established successfully the host will send:  
@@ -32,12 +32,6 @@ get [data-key] from [tablename]
 del [data-key] from [tablename]
 
 set [data-key] in [tablename] to [data]
-
-sup create [tablename]
-
-sup delete [tablename]
-
-sup getlen [tablename]
 ```
 
 #### Notes:  

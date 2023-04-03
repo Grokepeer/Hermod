@@ -2,7 +2,6 @@
 use std::{
     io::Write,
     net::TcpStream,
-    time::Instant,
     sync::Arc
 };
 
@@ -11,14 +10,10 @@ use super::{
 };
 
 pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    // let timestart = Instant::now();
-
     let l = match query.find(" ") {
         Some(n) => n + 1,
         _ => return 400,
     };
-
-    // println!("Key: {:?}", &query[..l - 1].as_bytes());
 
     if &query[l..l + 4] == "from" {
         match store.get_table(&query[l + 5..query.len() - 1]) {
@@ -26,20 +21,16 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 
                 Ok(data) => {
                     stream.write(data.as_bytes()).unwrap_or(0);
                     return 200;
-                    // println!("Table here: {:.2?}", timestart.elapsed());
-                    // println!("Record data: {}", data);
                 },
                 Err(_) => return 404
             },
             Err(_) => return 404
-            // stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
         }
-    } else {
-        return 400
     }
+    return 400
 }
 
-pub fn setop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
+pub fn setop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
     let l = match query.find(" ") {
         Some(n) => n + 1,
         _ => return 400,
@@ -55,57 +46,52 @@ pub fn setop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 
             return match store.get_table(&query[l + 3..l2 - 1]) {
                 Ok(table) => match table.create_record(&query[..l - 1], &query[l2 + 3..]) {
                     0 => 200,
-                    // stream.write("KeyData set successfully".as_bytes()).unwrap_or(0),
-                    1 => 200,
-                    // stream.write("KeyData already set".as_bytes()).unwrap_or(0),
+                    1 => 409,
                     _ => 500
-                    // stream.write("Unable to create KeyData".as_bytes()).unwrap_or(0)
                 },
                 Err(_) => 404
             };
-        } else {
-            return 400
         }
-    } else {
-        return 400
     }
+    return 400
 }
 
-pub fn delop(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    // if query.len() == 4 && query[2] == "from" {
-    //     match store.get_table(query[3]) {
-    //         Ok(table) => match table.delete_record(query[1]) {
-    //             0 => stream.write("KeyData deleted successfully".as_bytes()).unwrap_or(0),
-    //             1 => stream.write("KeyData doesn't exists".as_bytes()).unwrap_or(0),
-    //             _ => stream.write("Unable to delete KeyData".as_bytes()).unwrap_or(0)
-    //         },
-    //         Err(_) => stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
-    //     };
-    // } else {
-    //     stream.write("Invalid parameters".as_bytes()).unwrap_or(0);
-    // }
-    return 200
+pub fn delop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
+    let l = match query.find(" ") {
+        Some(n) => n + 1,
+        _ => return 400,
+    };
+
+    if &query[l..l + 4] == "from" {
+        match store.get_table(&query[l + 5..query.len() - 1]) {
+            Ok(table) => match table.delete_record(&query[..l - 1]) {
+                0 => return 200,
+                1 => return 404,
+                _ => return 500
+            },
+            Err(_) => return 404
+        }
+    }
+    return 400
 }
 
 pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    // match store.get_table(&query[7..query.len() - 1]) {
-    //     Ok(table) => match table.table.read() {
-    //         Ok(vec) => {
-    //             // stream.write(&vec.len().to_be_bytes()).unwrap_or(0);
-    //             println!("{}", vec.len());
-    //             0
-    //         },
-    //         Err(_) => stream.write("Unable to access table".as_bytes()).unwrap_or(0)
-    //     },
-    //     Err(_) => stream.write("No DataTable with the given name".as_bytes()).unwrap_or(0)
-    // };
+    match store.get_table(&query[7..query.len() - 1]) {
+        Ok(table) => match table.table.read() {
+            Ok(vec) => {
+                stream.write(&vec.len().to_be_bytes()).unwrap_or(0);
+                return 200
+            },
+            Err(_) => return 500
+        },
+        Err(_) => return 404
+    };
+}
+
+pub fn supercreate(_query: String, _store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
     return 200
 }
 
-pub fn supercreate(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    return 200
-}
-
-pub fn superdelete(query: String, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
+pub fn superdelete(_query: String, _store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
     return 200
 }

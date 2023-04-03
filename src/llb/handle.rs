@@ -8,7 +8,7 @@ use std::{
 
 use super::{
     datastr::{DataBase, PkgData},
-    handleops::{getop, setop, delop, getlen, supercreate, superdelete}
+    handleops::{getop, setop, delop, getlen}
 };
 
 pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgData>) {
@@ -31,12 +31,10 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
         if query.len() > 5 {
             let nxt = &query[4..];
 
-            // println!("{:?}", query);
-
             code = match &query[..3] {
                 "get" => getop(nxt, &store, &stream),
                 "set" => setop(nxt, &store, &stream),
-                "del" => delop(query, &store, &stream),
+                "del" => delop(nxt, &store, &stream),
                 "sup" => superhandle(nxt, &store, &stream),
                 "ext" => break,
                 _ => 400
@@ -51,7 +49,6 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     stream.shutdown(Shutdown::Read).unwrap_or(());
 }
 
-fn superhandle (query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    getlen(query, &store, &stream);
-    return 200
+fn superhandle (query: &str, store: &Arc<DataBase>, stream: &TcpStream) -> u16 {
+    return getlen(query, &store, &stream);
 }

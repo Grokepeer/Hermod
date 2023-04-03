@@ -118,7 +118,7 @@ impl DataTable {
                 for record in table.iter() {
                     if compare(recordkey.as_bytes(), &record.key) {
                         // println!("Address: {:p}", record);
-                        // println!("Address key: {:?}", record.key);
+                        // println!("Address key: {:?}", size_of_val(&record.data));
                         // println!("Address data: {}", size_of_val(&*record.data.read().unwrap()));
                         return Ok(record.data.read().unwrap().to_string())
                     }
@@ -163,7 +163,6 @@ impl DataTable {
             byteskey[i as usize] = recordkey.as_bytes()[i as usize];
         }
 
-        // println!("Set key: {:?}", byteskey);
         match self.is_record(recordkey) {
             (0, _x) => {
                 match self.table.write() {
@@ -205,6 +204,7 @@ impl DataTable {
     }
 }
 
+//Compares a slice with a fixed-sized array
 fn compare(slice: &[u8], array: &[u8; 20]) -> bool {
     for i in 0..slice.len() {
         if slice[i] != array[i] {
