@@ -28,9 +28,9 @@ fn main() {
     let store = Arc::new(DataBase::new());
     store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
     
-    println!("\n\t\tHermod v{}, API v{}", pkg.pkgv, pkg.apiv);
-    println!("\t\tDel_Token: {}", pkg.deltoken);
-    println!("\t\tHermod is starting up...\n");
+    println!("\n\tHermod v{}, API v{}", pkg.pkgv, pkg.apiv);
+    println!("\tDel_Token: {}", pkg.deltoken);
+    println!("\tHermod is starting up...\n");
 
     let mut handles = Vec::new();
     let mut counter = 0;
