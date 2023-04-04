@@ -1,7 +1,9 @@
 [package]
 name = "hermod"
 version = "0.2.2"
+description = "A fast Main-Memory DataBaseMS optimized with AI. Wah-pah."
 authors = ["Matteo Minardi <matteo.minardi2014@gmail.com"]
+repository = "https://github.com/Grokepeer/Hermod"
 edition = "2021"
 
 [workspace]

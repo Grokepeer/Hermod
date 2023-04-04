@@ -10,5 +10,4 @@ services:
     ports:
       - 2088:2088
     environment:
-      - HTTP_Threads=4
-      - Del_Token=token
+      - DEL_TOKEN=testing

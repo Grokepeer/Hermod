@@ -18,8 +18,8 @@ use hermod::llb::{
 fn main() {
     let pkg = Arc::new({ PkgData {
         pkgv: String::from(option_env!("CARGO_PKG_VERSION").unwrap_or("0.0.1")),
-        apiv: String::from(option_env!("CARGO__VERSION").unwrap_or("0.0.1")),
-        deltoken: String::from(option_env!("Del_Token").unwrap_or("token"))
+        apiv: String::from(option_env!("API_VERSION").unwrap_or("0.0.1")),
+        deltoken: String::from(option_env!("DEL_TOKEN").unwrap_or("token"))
     }});
     
     let listener = Arc::new(TcpListener::bind("0.0.0.0:2088").expect("[Hermod] Unable to bind to port 2088 on host"));
@@ -29,11 +29,13 @@ fn main() {
     store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
     
     println!("\n\tHermod v{}, API v{}", pkg.pkgv, pkg.apiv);
-    println!("\tDel_Token: {}", pkg.deltoken);
-    println!("\tHermod is starting up...\n");
+    println!("\tDEL_TOKEN: {}", pkg.deltoken);
+    println!("\tHermod is starting up\n");
 
     let mut handles = Vec::new();
     let mut counter = 0;
+
+    println!("Waiting on port...");
     for stream in listener.incoming() {
         counter += 1;
         let id = counter;
