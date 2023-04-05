@@ -29,24 +29,28 @@ With the first v0.0.0 being the host version and the second being the API versio
 The connection between host and client **is not encrypted** so all data shared between them is interceptable by any entity that has access to the network of the machines involved.
 
 ### Commands formatting:  
+#### GET
 ```
 get [data-key] from [tablename]
 ```
 
 Get, given a data-key and the tablename will return two streams of data, the first, if the reading was successful, will return the data that was saved paired with the key, the second stream will send the query results as described in the *Response formatting* section below.
 
+#### SET
 ```
 set [data-key] in [tablename] to [data]
 ```
 
 Set, given a data-key, a table and some data will save the data paired to the key in the DB. If key is already in use in the table it will return a 209 code, 200 if the data was successfully written to the DB.
 
+#### DEL
 ```
 del [data-key] from [tablename]
 ```
 
 Del, given the data-key and the tablename will delete, if the record existed already, a key and it's data.
 
+#### GETLEN
 ```
 sup getlen [tablename]
 ```
@@ -63,7 +67,7 @@ Getlen is a command in the suite of the Sup-er user that retuns the number of re
 ```
 
 #### Notes:  
-- \\[response-data] is sent in a different stream from the {tail} so the client must expect one or two streams dependently on the request and the response.
+- \[response-data] is sent in a different stream from the {tail} so the client must expect one or two streams dependently on the request and the response.
 - *x* is the query execution time in nano seconds, reported as a 4 to 12 digits number. 
 - *z* is an HTTP response code (200, 400, 404, 500...) that indicates the successfulness of the query server-side.
 
