@@ -3,6 +3,19 @@
 ### Hermod High Performance In-Memory Database System
 Hermod is an In-Memory database management system that was designed for YBD. It uses a custom multi-threaded TCP handle server. Stores data in a key-based table that is optimized by an ANN to prioritize data based on access patterns.
 
+## Hermod Installation
+To get Hermod working you only need to build the executable for your OS, or get the last executable built in the GitHub release page here, and create a config.json file in the same folder as the executable. This will look like this:
+
+```
+{
+  "token": "VeryComplexToken"
+}
+```
+
+#### Notes:  
+- If a config.json is not provided Hermod will go to default.
+- If provided DEL_TOKEN is the key that will be used to authorized operations that override data, like *del* and *set*.
+
 ## Docker Installation
 ```
 services:
@@ -14,7 +27,9 @@ services:
       - DEL_TOKEN=token
 ```
 
-If provided DEL_TOKEN is the key that will be used to authorized operations that override data, like *del* and *set*
+#### Notes:  
+- If provided DEL_TOKEN is the key that will be used to authorized operations that override data, like *del* and *set*.  
+
 Once the service is started and printed "Waiting on port..." the DB is ready to receive requests.
 
 ## API
