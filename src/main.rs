@@ -40,7 +40,6 @@ fn main() {
     
     //Declaration of the KeysVector, it holds all keys to all content of DB, it's set in Arc and RwLock so it can be read by many, modified by one
     let store = Arc::new(DataBase::new());
-    store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
     
     println!("Welcome to Hermod\n\n DB v{}, API v{}", pkg.pkgv, pkg.apiv);
     println!(" DEL_TOKEN: {}", pkg.deltoken);
