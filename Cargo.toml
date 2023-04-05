@@ -1,9 +1,11 @@
 [package]
 name = "hermod"
 version = "0.2.2"
-description = "A fast Main-Memory DataBaseMS optimized with AI. Wah-pah."
+description = "A fast In-Memory DBMS optimized with AI. Wah-pah."
 authors = ["Matteo Minardi <matteo.minardi2014@gmail.com"]
+keywords = ["DataBase", "In-Memory"]
 repository = "https://github.com/Grokepeer/Hermod"
+license = "AGPL-3.0"
 edition = "2021"
 
 [workspace]

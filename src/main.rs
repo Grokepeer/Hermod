@@ -28,16 +28,17 @@ fn main() {
     let store = Arc::new(DataBase::new());
     store.get_table("_basedb").unwrap().create_record("testkey", "datainside");
     
-    println!("\n\tHermod v{}, API v{}", pkg.pkgv, pkg.apiv);
+    println!("Welcome to Hermod\n\n\tDB v{}, API v{}", pkg.pkgv, pkg.apiv);
     println!("\tDEL_TOKEN: {}", pkg.deltoken);
     println!("\tHermod is starting up\n");
 
     let mut handles = Vec::new();
     let mut counter = 0;
 
+    //The DB is completely ready to receive a connection
     println!("Waiting on port...");
     for stream in listener.incoming() {
-        counter += 1;
+        counter += 1;   //Id counter
         let id = counter;
         let pkg_clone = Arc::clone(&pkg);
         let store_clone = Arc::clone(&store);

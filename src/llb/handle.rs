@@ -15,21 +15,31 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
+    //Connection established, send confirmation to the Client
     stream.write(format!("Hermod - Connection established (v{}, v{})", pkg.pkgv, pkg.apiv).as_bytes()).unwrap();
     println!("Started handle ID.{id} in {:.3?}", timestart.elapsed());
 
+    //Starts CLI loop
     loop {
         let mut query = String::from("");
-        match buffer.read_line(&mut query) {
+        match buffer.read_line(&mut query) {    //Read line from the TCP buffer
             Err(_) => break,
             _ => {}
         };
 
-        let chrono = Instant::now();    //Starts the query
+        //Starts the query
+        let chrono = Instant::now();
 
-        let mut code: u16 = 500;
-        if query.len() > 5 {
-            let nxt = &query[4..];
+        let mut code = 400u16;
+        let querylen = query.len();
+        
+        //Checks that the query at leasts has the first 3 character (1st parameter)
+        if querylen > 2 {
+            
+            let mut nxt = "";
+            if querylen > 4 {
+                nxt = &query[4..];
+            }
 
             code = match &query[..3] {
                 "get" => getop(nxt, &store, &stream),
@@ -44,11 +54,17 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
         stream.write(format!("{}{:12?}{}{:3?}{}", "{", chrono.elapsed().as_nanos(), " ", code, "}\n").as_bytes()).unwrap_or(0);
     }
 
+    //Closing TCP connection
     stream.write("\nDropping the connection to Hermod...".as_bytes()).unwrap_or(0);
     println!("Closed handle ID.{id} after {:.3?}", timestart.elapsed());
     stream.shutdown(Shutdown::Read).unwrap_or(());
 }
 
 fn superhandle (query: &str, store: &Arc<DataBase>, stream: &TcpStream) -> u16 {
-    return getlen(query, &store, &stream);
+    let querylen = query.len();
+    if querylen > 7 {
+        return getlen(query, &store, &stream);
+    } else {
+        return 400
+    }
 }
