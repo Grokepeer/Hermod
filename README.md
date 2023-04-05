@@ -5,7 +5,6 @@ Hermod is an In-Memory database management system that was designed for YBD. It 
 
 ## Hermod Installation
 To get Hermod working you only need to build the executable for your OS, or get the last executable built in the GitHub release page here, and create a config.json file in the same folder as the executable. This will look like this:
-
 ```
 {
   "token": "VeryComplexToken"
@@ -13,10 +12,11 @@ To get Hermod working you only need to build the executable for your OS, or get 
 ```
 
 #### Notes:  
-- If a config.json is not provided Hermod will go to default.
+- If a config.json is not provided Hermod will go to default settings.
 - If provided DEL_TOKEN is the key that will be used to authorized operations that override data, like *del* and *set*.
 
 ## Docker Installation
+Example of docker-compose.yaml
 ```
 services:
   hermod:
@@ -32,7 +32,7 @@ services:
 
 Once the service is started and printed "Waiting on port..." the DB is ready to receive requests.
 
-## API
+## API v0.2.0
 To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088. Once the connection is established successfully the host will send:  
 ```
 Hermod - Connection established (v0.0.0, v0.0.0)
