@@ -33,6 +33,7 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 
 }
 
 //Set operation requires a query with "[data-key] in [datatable] to [data]"
+//Returns 409 if the record already existed and was not overidden, 200 if it was successfully created
 pub fn setop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
     let l = match query.find(" ") {
         Some(n) => n + 1,
@@ -81,6 +82,7 @@ pub fn delop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16
     return 400
 }
 
+//Given a DataTable this function writes to stream the number of elements present in it's data vector
 pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
     match store.get_table(&query[7..query.len() - 1]) {
         Ok(table) => match table.table.read() {
