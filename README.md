@@ -10,8 +10,11 @@ services:
     image: grokepeer/hermod:0.2.2
     ports:
       - 2088:2088
+    environment:
+      - DEL_TOKEN=token
 ```
 
+If provided DEL_TOKEN is the key that will be used to authorized operations that override data, like *del* and *set*
 Once the service is started and printed "Waiting on port..." the DB is ready to receive requests.
 
 ## API
@@ -28,11 +31,27 @@ The connection between host and client **is not encrypted** so all data shared b
 ### Commands formatting:  
 ```
 get [data-key] from [tablename]
+```
 
-del [data-key] from [tablename]
+Get, given a data-key and the tablename will return two streams of data, the first, if the reading was successful, will return the data that was saved paired with the key, the second stream will send the query results as described in the *Response formatting* section below.
 
+```
 set [data-key] in [tablename] to [data]
 ```
+
+Set, given a data-key, a table and some data will save the data paired to the key in the DB. If key is already in use in the table it will return a 209 code, 200 if the data was successfully written to the DB.
+
+```
+del [data-key] from [tablename]
+```
+
+Del, given the data-key and the tablename will delete, if the record existed already, a key and it's data.
+
+```
+sup getlen [tablename]
+```
+
+Getlen is a command in the suite of the Sup-er user that retuns the number of records written on a table.
 
 #### Notes:  
 - The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces
@@ -40,12 +59,13 @@ set [data-key] in [tablename] to [data]
 
 ### Response formatting:  
 ```
-[data]{xxxxxxxxxxxx zzz}
+[response-data]{xxxxxxxxxxxx zzz}
 ```
 
 #### Notes:  
-- *x* is a 4 to 12 digits number that is the query execution time in nano seconds
-- *z* is an HTTP response code
+- \\[response-data] is sent in a different stream from the {tail} so the client must expect one or two streams dependently on the request and the response.
+- *x* is the query execution time in nano seconds, reported as a 4 to 12 digits number. 
+- *z* is an HTTP response code (200, 400, 404, 500...) that indicates the successfulness of the query server-side.
 
 ## ANN details
 

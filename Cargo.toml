@@ -8,6 +8,9 @@ repository = "https://github.com/Grokepeer/Hermod"
 license = "AGPL-3.0"
 edition = "2021"
 
+[dependencies]
+serde_json = "1.0"
+
 [workspace]
 members = ["."]
 
