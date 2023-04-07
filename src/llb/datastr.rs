@@ -59,29 +59,31 @@ impl DataBase {
 
     //This function looks for a table in the db
     //Returns 1 if the table exists, 0 if it doesn't and -1 if the function couldn't complete the operation correctly
-    fn is_table(&self, tablename: &str) -> i8 {
+    fn is_table(&self, tablename: &str) -> (i8, u32) {
         match self.db.read() {
             Ok(db) => {
+                let mut x = 0;
                 for table in db.iter() {
                     if table.key.as_str() == tablename {
-                        return 1
+                        return (1, x)
                     }
+                    x += 1;
                 }
             }
             Err(_) => {
                 println!("[Hermod] Unable to get db.read() access");
-                return -1
+                return (-1, 0)
             }
         }
         
-        return 0
+        return (0, 0)
     }
 
     //This function creates a table in the db that it was called upon
     //Returns 0 if the operation was successful, 1 if the table already existed, -1 if the function couldn't complete properly
     pub fn create_table(&self, tablename: &str) -> i8 {
         match self.is_table(tablename) {
-            0 => {
+            (0, _x) => {
                 match self.db.write() {
                     Ok(mut db) => {
                         db.push(Arc::new(DataTable::new(tablename)));
@@ -93,7 +95,24 @@ impl DataBase {
                     }
                 }
             }
-            r => return r
+            (r, _x) => return r
+        }
+    }
+
+    //This function deletes a table given the name
+    //Returns 0 if operation completed successfully, 1 if the table didn't exist and -1 if the function couldn't complete
+    pub fn delete_table(&self, tablename: &str) -> i8 {
+        match self.is_table(tablename) {
+            (1, x) => {
+                match self.db.write() {
+                    Ok(mut db) => {
+                        db.remove(x as usize);
+                        return 0
+                    },
+                    Err(_) => return -1
+                };
+            },
+            (_r, _x) => return 1
         }
     }
 }

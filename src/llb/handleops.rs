@@ -84,7 +84,7 @@ pub fn delop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16
 
 //Given a DataTable this function writes to stream the number of elements present in it's data vector
 pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    match store.get_table(&query[7..query.len() - 1]) {
+    match store.get_table(&query[..query.len() - 1]) {
         Ok(table) => match table.table.read() {
             Ok(vec) => {
                 stream.write(vec.len().to_string().as_bytes()).unwrap_or(0);
@@ -96,10 +96,27 @@ pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16
     };
 }
 
-pub fn supercreate(_query: String, _store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
-    return 200
+//Creates a new table in the DB
+//Returns 400 if the table already existed
+pub fn supercreate(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
+    if query.len() > 1 {
+        match store.create_table(query.trim()) {
+            0 => return 200,
+            1 => return 400,
+            _ => return 500
+        }
+    }
+    return 400
 }
 
-pub fn superdelete(_query: String, _store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
-    return 200
+//Deletes a table from the DB
+pub fn superdelete(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
+    if query.len() > 1 {
+        match store.delete_table(query.trim()) {
+            0 => return 200,
+            1 => return 404,
+            _ => return 500
+        };
+    }
+    return 400
 }
