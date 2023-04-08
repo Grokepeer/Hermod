@@ -96,6 +96,18 @@ pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16
     };
 }
 
+//Returns all the tables in the DB in a list
+pub fn gettab(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
+    if query.len() == 0 {
+        let mut tablevec = Vec::new();
+        for table in store.db.read().unwrap().iter() {
+            tablevec.push(table.key.to_string());
+        }
+        stream.write(format!("{:?}", tablevec).as_bytes()).unwrap_or(0);
+    }
+    return 200
+}
+
 //Creates a new table in the DB
 //Returns 400 if the table already existed
 pub fn supercreate(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {

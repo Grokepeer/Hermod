@@ -182,8 +182,8 @@ impl DataTable {
             byteskey[i as usize] = recordkey.as_bytes()[i as usize];
         }
 
-        match self.is_record(recordkey) {
-            (0, _x) => {
+        // match self.is_record(recordkey) {
+            // (0, _x) => {
                 match self.table.write() {
                     Ok(mut table) => {
                         table.push({ KeyData {
@@ -197,9 +197,9 @@ impl DataTable {
                         return -1
                     }
                 }
-            }
-            (r, _x) => return r
-        }
+            // }
+            // (r, _x) => return r
+        // }
     }
 
     //This function deletes a record from the table that it was called upon
