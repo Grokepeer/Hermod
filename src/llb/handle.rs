@@ -51,7 +51,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
             };
         }
 
-        stream.write(format!("{}{:12?}{}{:3?}{}", "{", chrono.elapsed().as_nanos(), " ", code, "}\n").as_bytes()).unwrap_or(0);
+        stream.write(format!("{}{:12?}{}{:3?}{}", "{", chrono.elapsed().as_nanos(), " ", code, "}\u{4}").as_bytes()).unwrap_or(0);
     }
 
     //Closing TCP connection
