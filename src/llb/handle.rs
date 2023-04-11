@@ -41,6 +41,8 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
                 nxt = &query[4..];
             }
 
+            // println!("Query: {:?}", query);
+
             code = match &query[..3] {
                 "get" => getop(nxt, &store, &stream),
                 "set" => setop(nxt, &store, &stream),
