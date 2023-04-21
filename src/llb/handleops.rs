@@ -16,6 +16,7 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 
         _ => return 400,
     };
 
+    println!("{}", &query[l + 5..query.len() - 1]);
     let querylen = query.len();
     if querylen > l + 6 && &query[l..l + 4] == "from" { //Checks that there's a "from" and something after it (the datatable name)
         match store.get_table(&query[l + 5..query.len() - 1]) {
