@@ -123,7 +123,7 @@ impl DataTable {
             key: String::from(tablename),
             table: RwLock::new(Vec::new())
         }};
-        datatable.create_record("_base", "_data");
+        datatable.create_record("_base", "_data", &false);
 
         return datatable
     }
@@ -199,7 +199,7 @@ impl DataTable {
                 }
             },
             (1, x) => { //If the record exists but data-override is enabled it will delete the record and create a new one
-                if dataoverride {
+                if *dataoverride {
                     match self.table.write() {
                         Ok(mut table) => {
                             table.remove(x as usize);

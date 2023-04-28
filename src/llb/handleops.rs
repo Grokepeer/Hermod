@@ -10,7 +10,7 @@ use super::{
 };
 
 //Get operation requires a query with "[data-key] from [datatable]"
-pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream, auth: &bool) -> u16 {
+pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream, _auth: &bool) -> u16 {
     let l = match query.find(" ") { //Finds the space between [data-key] and "from"
         Some(n) => n + 1,
         _ => return 400,
@@ -52,7 +52,7 @@ pub fn setop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream, auth: 
                 Ok(table) => match table.create_record(&query[..l - 1], &query[l2 + 3..], auth) {
                     0 => 201,
                     1 => 405,
-                    2 => 200
+                    2 => 200,
                     _ => 500
                 },
                 Err(_) => 404
@@ -103,12 +103,12 @@ pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16
 
 //Returns all the tables in the DB in a list
 pub fn gettab(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    if query.len() == 0 {
+    if query.trim().len() == 0 {
         let mut tablevec = Vec::new();
         for table in match store.db.read() {
-            Ok(store) => store.iter(),
-            Err() => return 500
-        } {
+            Ok(store) => store,
+            Err(_) => return 500
+        }.iter() {
             tablevec.push(table.key.to_string());
         }
         stream.write(format!("{:?}", tablevec).as_bytes()).unwrap_or(0);
@@ -119,7 +119,7 @@ pub fn gettab(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16
 //Creates a new table in the DB
 //Returns 400 if the table already existed
 pub fn supercreate(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
-    if query.len() > 1 {
+    if query.trim().len() > 1 && !query.contains(" ") {
         match store.create_table(query.trim()) {
             0 => return 200,
             1 => return 400,
@@ -131,7 +131,7 @@ pub fn supercreate(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) 
 
 //Deletes a table from the DB
 pub fn superdelete(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
-    if query.len() > 1 {
+    if query.trim().len() > 1 {
         match store.delete_table(query.trim()) {
             0 => return 200,
             1 => return 404,

@@ -13,7 +13,7 @@ To get Hermod working you only need to build the executable for your OS, or get 
 
 #### Notes:  
 - If a config.json is not provided Hermod will go to default settings.
-- If provided DEL_TOKEN is the key that will be used to authorized operations that override data, like *del* and *set*.
+- If provided token is the key that will be used to authorize operations that override data, like *del* and *set*.
 
 ## Docker Installation
 Example of docker-compose.yaml
@@ -43,7 +43,7 @@ Once the connection is established successfully the host will send:
 Hermod - Connection established (v0.0.0, v0.0.0, Auth)
 ```
 
-With the first v0.0.0 being the host version and the second being the API version that the host is using and then Auth or noAuth depending on wether the guest authenticated successfully as super-user.  
+With the first v0.0.0 being the host version and the second being the API version that the host is using and then Auth or noAuth depending on whether the guest authenticated successfully as super-user.  
 It is noteworthy to know that for a Client to connect only the API version needs to be matching as that dictates how the server will interact with the client.
 
 #### Superuser:  
