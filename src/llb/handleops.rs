@@ -10,7 +10,7 @@ use super::{
 };
 
 //Get operation requires a query with "[data-key] from [datatable]"
-pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
+pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream, auth: &bool) -> u16 {
     let l = match query.find(" ") { //Finds the space between [data-key] and "from"
         Some(n) => n + 1,
         _ => return 400,
@@ -34,7 +34,7 @@ pub fn getop(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 
 
 //Set operation requires a query with "[data-key] in [datatable] to [data]"
 //Returns 409 if the record already existed and was not overidden, 200 if it was successfully created
-pub fn setop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
+pub fn setop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream, auth: &bool) -> u16 {
     let l = match query.find(" ") { //Finds the space between [data-key] and "from"
         Some(n) => n + 1,
         _ => return 400,
@@ -49,9 +49,10 @@ pub fn setop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16
 
         if querylen > l2 + 4 && &query[l2..l2 + 2] == "to" {    //Checks that there's a "to" and some data after it
             return match store.get_table(&query[l + 3..l2 - 1]) {
-                Ok(table) => match table.create_record(&query[..l - 1], &query[l2 + 3..]) {
-                    0 => 200,
-                    1 => 409,
+                Ok(table) => match table.create_record(&query[..l - 1], &query[l2 + 3..], auth) {
+                    0 => 201,
+                    1 => 405,
+                    2 => 200
                     _ => 500
                 },
                 Err(_) => 404
@@ -62,7 +63,11 @@ pub fn setop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16
 }
 
 //Del operation requires a query with "[data-key] from [datatable]"
-pub fn delop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream) -> u16 {
+pub fn delop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream, auth: &bool) -> u16 {
+    if !auth {
+        return 405
+    }
+    
     let l = match query.find(" ") { //Finds the space between [data-key] and "from"
         Some(n) => n + 1,
         _ => return 400,
