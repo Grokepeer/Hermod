@@ -33,7 +33,11 @@ services:
 Once the service is started and printed "Waiting on port..." the DB is ready to receive requests.
 
 ## API v0.3.0
-To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088 and send "auth: "token"" with the right token to be authenticated or none if no authentication is needed or available. Once the connection is established successfully the host will send:  
+To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088 and send 
+```
+auth: "token"
+```
+with the right token to be authenticated or none if no authentication is needed or available. Once the connection is established successfully the host will send:  
 ```
 Hermod - Connection established (v0.0.0, v0.0.0, Auth)
 ```
