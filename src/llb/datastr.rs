@@ -175,15 +175,15 @@ impl DataTable {
     }
 
     //This function creates a record in the table that it was called upon
-    //Returns 0 if the operation was successful, 1 if the record already existed, -1 if the function couldn't complete properly
-    pub fn create_record(&self, recordkey: &str, recordata: &str) -> i8 {
+    //Returns 0 if the operation was successful, 1 if the record already existed, 2 if the record existed but was overridden, -1 if the function couldn't complete properly
+    pub fn create_record(&self, recordkey: &str, recordata: &str, dataoverride: &bool) -> i8 {
         let mut byteskey = [0u8; 20];
         for i in 0..recordkey.len() {
             byteskey[i as usize] = recordkey.as_bytes()[i as usize];
         }
 
-        // match self.is_record(recordkey) {
-            // (0, _x) => {
+        match self.is_record(recordkey) {
+            (0, _x) => {
                 match self.table.write() {
                     Ok(mut table) => {
                         table.push({ KeyData {
@@ -197,9 +197,28 @@ impl DataTable {
                         return -1
                     }
                 }
-            // }
-            // (r, _x) => return r
-        // }
+            },
+            (1, x) => { //If the record exists but data-override is enabled it will delete the record and create a new one
+                if dataoverride {
+                    match self.table.write() {
+                        Ok(mut table) => {
+                            table.remove(x as usize);
+                            table.push({ KeyData {
+                                key: byteskey,
+                                data: RwLock::new(String::from(recordata))
+                            }});
+                            return 2
+                        }
+                        Err(_) => {
+                            println!("[Hermod] Unable to get table.write() access");
+                            return -1
+                        }
+                    }
+                }
+                return 1
+            }
+            (r, _x) => return r
+        }
     }
 
     //This function deletes a record from the table that it was called upon

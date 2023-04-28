@@ -32,13 +32,17 @@ services:
 
 Once the service is started and printed "Waiting on port..." the DB is ready to receive requests.
 
-## API v0.2.0
-To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088. Once the connection is established successfully the host will send:  
+## API v0.3.0
+To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088 and send "auth: "token"" with the right token to be authenticated or none if no authentication is needed or available. Once the connection is established successfully the host will send:  
 ```
-Hermod - Connection established (v0.0.0, v0.0.0)
+Hermod - Connection established (v0.0.0, v0.0.0, Auth)
 ```
 
-With the first v0.0.0 being the host version and the second being the API version that the host is using. It is noteworthy to know that for a Client to connect only the API version needs to be matching as that dictates how the server will interact with the client.
+With the first v0.0.0 being the host version and the second being the API version that the host is using and then Auth or noAuth depending on wether the guest authenticated successfully as super-user. 
+It is noteworthy to know that for a Client to connect only the API version needs to be matching as that dictates how the server will interact with the client.
+
+#### Superuser note:  
+A user who successfully authenticates as superuser can create and delete tables, use sup commands (such as gettab and getlen), delete records and override their content when calling a set query on an existing record.
 
 #### Security note:  
 The connection between host and client **is not encrypted** so all data shared between them is interceptable by any entity that has access to the network of the machines involved.
@@ -49,7 +53,13 @@ The connection between host and client **is not encrypted** so all data shared b
 get [data-key] from [tablename]
 ```
 
-Get, given a data-key and the tablename will return two streams of data, the first, if the reading was successful, will return the data that was saved paired with the key, the second stream will send the query results as described in the *Response formatting* section below.
+Get, given a data-key and the tablename will return the query results as described in the *Response formatting* section below.
+
+##### Response codes:
+- 200 the record was found and was returned to the user
+- 400 bad request
+- 404 table or recordkey given not found
+- 500 generic host error
 
 #### SET
 ```
@@ -58,12 +68,27 @@ set [data-key] in [tablename] to [data]
 
 Set, given a data-key, a table and some data will save the data paired to the key in the DB. If key is already in use in the table it will return a 209 code, 200 if the data was successfully written to the DB.
 
+##### Response codes:
+- 201 the new record was successfully created in the table
+- 200 the record was reset to a new content
+- 400 bad request
+- 404 table given not found
+- 405 set request on an existing record with an unauthenticated user (non-superuser)
+- 500 generic host error
+
 #### DEL
 ```
 del [data-key] from [tablename]
 ```
 
 Del, given the data-key and the tablename will delete, if the record existed already, a key and it's data.
+
+##### Response codes:
+- 200 the record was deletec
+- 400 bad request
+- 404 table or recordkey given not found
+- 405 delete request with an unauthenticated user (non-superuser)
+- 500 generic host error
 
 #### GETLEN
 ```
@@ -78,13 +103,14 @@ Getlen is a command in the suite of the Sup-er user that retuns the number of re
 
 ### Response formatting:  
 ```
-[response-data]{xxxxxxxxxxxx zzz}
+[response-data]{xxxxxxxxxxxx zzz}\u4
 ```
 
 #### Notes:  
-- \[response-data] is sent in a different stream from the {tail} so the client must expect one or two streams dependently on the request and the response.
-- *x* is the query execution time in nano seconds, reported as a 4 to 12 digits number. 
+- \[response-data] is possibly sent in a different stream from the {tail} so the client must expect multiple streams dependently on the request and the response.
+- *x* is the query execution time in nano seconds, reported as a 3 to 12 digits number. 
 - *z* is an HTTP response code (200, 400, 404, 500...) that indicates the successfulness of the query server-side.
+- Every request always terminates with a UTF8 character number 4 ("\u4").
 
 ## ANN details
 

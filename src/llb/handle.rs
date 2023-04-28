@@ -15,8 +15,14 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
+    let mut query = String::from("");   //Get DEL_TOKEN
+    let auth = match buffer.read_line(&mut query) {
+        Err(_) => false,
+        _ => pkg.deltoken == query[6..query.len() - 1]  //Checks if client DEL_TOKEN matches the Pkg DEL_TOKEN
+    };
+
     //Connection established, send confirmation to the Client
-    stream.write(format!("Hermod - Connection established (v{}, v{})", pkg.pkgv, pkg.apiv).as_bytes()).unwrap();
+    stream.write(format!("Hermod - Connection established (v{}, v{}, {})", pkg.pkgv, pkg.apiv, if auth { "Auth" } else { "noAuth" }).as_bytes()).unwrap();
     println!("Started handle ID.{id} in {:.3?}", timestart.elapsed());
 
     //Starts CLI loop
@@ -44,10 +50,10 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
             // println!("Query: {:?}", query);
 
             code = match &query[..3] {
-                "get" => getop(nxt, &store, &stream),
-                "set" => setop(nxt, &store, &stream),
-                "del" => delop(nxt, &store, &stream),
-                "sup" => superhandle(nxt, &store, &stream),
+                "get" => getop(nxt, &store, &stream, &auth),
+                "set" => setop(nxt, &store, &stream, &auth),
+                "del" => delop(nxt, &store, &stream, &auth),
+                "sup" => superhandle(nxt, &store, &stream, &auth),
                 "ext" => break,
                 _ => 400
             };
@@ -62,7 +68,11 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     stream.shutdown(Shutdown::Read).unwrap_or(());
 }
 
-fn superhandle (query: &str, store: &Arc<DataBase>, stream: &TcpStream) -> u16 {
+fn superhandle (query: &str, store: &Arc<DataBase>, stream: &TcpStream, auth: &bool) -> u16 {
+    if !auth {  //Checks authentication to super user
+        return 403
+    }
+
     let querylen = query.len();
     
     if querylen > 5 {
