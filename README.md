@@ -33,19 +33,20 @@ services:
 Once the service is started and printed "Waiting on port..." the DB is ready to receive requests.
 
 ## API v0.3.0
-To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088 and send 
+To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088 and send:   
 ```
 auth: "token"
 ```
-with the right token to be authenticated or none if no authentication is needed or available. Once the connection is established successfully the host will send:  
+with the right token to be authenticated, or none if no authentication is needed or available. 
+Once the connection is established successfully the host will send:  
 ```
 Hermod - Connection established (v0.0.0, v0.0.0, Auth)
 ```
 
-With the first v0.0.0 being the host version and the second being the API version that the host is using and then Auth or noAuth depending on wether the guest authenticated successfully as super-user. 
+With the first v0.0.0 being the host version and the second being the API version that the host is using and then Auth or noAuth depending on wether the guest authenticated successfully as super-user.  
 It is noteworthy to know that for a Client to connect only the API version needs to be matching as that dictates how the server will interact with the client.
 
-#### Superuser note:  
+#### Superuser:  
 A user who successfully authenticates as superuser can create and delete tables, use sup commands (such as gettab and getlen), delete records and override their content when calling a set query on an existing record.
 
 #### Security note:  
@@ -59,7 +60,7 @@ get [data-key] from [tablename]
 
 Get, given a data-key and the tablename will return the query results as described in the *Response formatting* section below.
 
-##### Response codes:
+#### Response codes:
 - 200 the record was found and was returned to the user
 - 400 bad request
 - 404 table or recordkey given not found
@@ -70,9 +71,9 @@ Get, given a data-key and the tablename will return the query results as describ
 set [data-key] in [tablename] to [data]
 ```
 
-Set, given a data-key, a table and some data will save the data paired to the key in the DB. If key is already in use in the table it will return a 209 code, 200 if the data was successfully written to the DB.
+Set, given a data-key, a table and some data will save the data paired to the key in the DB.
 
-##### Response codes:
+#### Response codes:
 - 201 the new record was successfully created in the table
 - 200 the record was reset to a new content
 - 400 bad request
@@ -87,8 +88,8 @@ del [data-key] from [tablename]
 
 Del, given the data-key and the tablename will delete, if the record existed already, a key and it's data.
 
-##### Response codes:
-- 200 the record was deletec
+#### Response codes:
+- 200 the record was delete
 - 400 bad request
 - 404 table or recordkey given not found
 - 405 delete request with an unauthenticated user (non-superuser)
@@ -100,6 +101,53 @@ sup getlen [tablename]
 ```
 
 Getlen is a command in the suite of the Sup-er user that retuns the number of records written on a table.
+
+#### Response codes:
+- 200 table found
+- 400 bad request
+- 403 unauthenticated user (non-superuser)
+- 404 table given not found
+- 500 generic host error
+
+#### GETTAB
+```
+sup gettab
+```
+
+Gettab is a command in the suite of the Sup-er user that retuns the array of all the tables in the DB.
+
+#### Response codes:
+- 200 OK
+- 400 bad request
+- 403 unauthenticated user (non-superuser)
+- 500 generic host error
+
+#### CREATE
+```
+sup create [tablename]
+```
+
+Gettab is a command in the suite of the Sup-er user that creates a new table.
+
+#### Response codes:
+- 200 table created successfully
+- 400 bad request
+- 403 unauthenticated user (non-superuser)
+- 500 generic host error
+
+#### DELETE
+```
+sup delete [tablename]
+```
+
+Gettab is a command in the suite of the Sup-er user that deletes an existing table.
+
+#### Response codes:
+- 200 table deleted successfully
+- 400 bad request
+- 403 unauthenticated user (non-superuser)
+- 404 table not found
+- 500 generic host error
 
 #### Notes:  
 - The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces

@@ -67,7 +67,7 @@ pub fn delop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream, auth: 
     if !auth {
         return 405
     }
-    
+
     let l = match query.find(" ") { //Finds the space between [data-key] and "from"
         Some(n) => n + 1,
         _ => return 400,
@@ -105,7 +105,10 @@ pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16
 pub fn gettab(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
     if query.len() == 0 {
         let mut tablevec = Vec::new();
-        for table in store.db.read().unwrap().iter() {
+        for table in match store.db.read() {
+            Ok(store) => store.iter(),
+            Err() => return 500
+        } {
             tablevec.push(table.key.to_string());
         }
         stream.write(format!("{:?}", tablevec).as_bytes()).unwrap_or(0);
