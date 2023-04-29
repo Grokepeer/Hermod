@@ -198,15 +198,18 @@ impl DataTable {
                     }
                 }
             },
-            (1, x) => { //If the record exists but data-override is enabled it will delete the record and create a new one
+            (1, _x) => { //If the record exists but data-override is enabled it will delete the record and create a new one
                 if *dataoverride {
-                    match self.table.write() {
-                        Ok(mut table) => {
-                            table.remove(x as usize);
-                            table.push({ KeyData {
-                                key: byteskey,
-                                data: RwLock::new(String::from(recordata))
-                            }});
+                    match self.table.read() {
+                        Ok(table) => {
+                            for record in table.iter() {
+                                if compare(recordkey.as_bytes(), &record.key) {
+                                    match record.data.write() {
+                                        Ok(mut data) => *data = recordata.to_string(),
+                                        Err(_) => return -1
+                                    }
+                                }
+                            }
                             return 2
                         }
                         Err(_) => {
