@@ -27,11 +27,12 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
 
     //Starts CLI loop
     loop {
-        let mut query = String::from("");
-        match buffer.read_line(&mut query) {    //Read line from the TCP buffer
+        let mut bytes: Vec<u8> = Vec::new();
+        match buffer.read_until(0x4, &mut bytes) {    //Read line from the TCP buffer
             Err(_) => break,
             _ => {}
         };
+        let query = String::from_utf8(bytes).unwrap();
 
         //Starts the query
         let chrono = Instant::now();
