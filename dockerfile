@@ -4,7 +4,7 @@ FROM rust:1.66-alpine3.17
 WORKDIR /usr/src/hermod
 # Install app dependencies
 COPY ./src ./src
-COPY ./cargo.toml ./Cargo.toml
+COPY ./Cargo.toml ./Cargo.toml
 COPY ./.cargo ./.cargo
 
 RUN cargo build -r

@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: dockerfile
-    image: grokepeer/hermod:latest
+    image: grokepeer/hermod:0.2.3
     command: ""
     ports:
       - 2088:2088
