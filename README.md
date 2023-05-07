@@ -37,7 +37,8 @@ To access Hermod API the Client needs to establish a TCP connection to Hermod on
 ```
 auth: "token"
 ```
-with the right token to be authenticated, or none if no authentication is needed or available. 
+followed by the "\n" newline character (UTF8: 0x0a).
+With the right token to be authenticated, or none if no authentication is needed or available. 
 Once the connection is established successfully the host will send:  
 ```
 Hermod - Connection established (v0.0.0, v0.0.0, Auth)
@@ -150,8 +151,9 @@ Gettab is a command in the suite of the Sup-er user that deletes an existing tab
 - 500 generic host error
 
 #### Notes:  
-- The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces
-- *Tablename* is a unique ID for each table, it cannot contain spaces
+- All requests to the Host must terminate with the UTF8 character 0x4 and all responses from the Host will terminate with the UTF8 character 0x4.
+- The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces.
+- *Tablename* is a unique ID for each table, it cannot contain spaces.
 
 ### Response formatting:  
 ```
@@ -162,7 +164,7 @@ Gettab is a command in the suite of the Sup-er user that deletes an existing tab
 - \[response-data] is possibly sent in a different stream from the {tail} so the client must expect multiple streams dependently on the request and the response.
 - *x* is the query execution time in nano seconds, reported as a 3 to 12 digits number. 
 - *z* is an HTTP response code (200, 400, 404, 500...) that indicates the successfulness of the query server-side.
-- Every request always terminates with a UTF8 character number 4 ("\u4").
+- Every request always terminates with a UTF8 character 0x4 ("\u4").
 
 ## ANN details
 
