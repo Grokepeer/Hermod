@@ -13,7 +13,7 @@ use std::{
 
 use serde_json::{json, Value};
 
-//Importing libraries structs and functions
+//Importing libraries structs and function
 use hermod::llb::{
     datastr::{DataBase, PkgData},
     handle::handle
