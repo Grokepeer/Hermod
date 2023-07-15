@@ -1,6 +1,6 @@
 [package]
 name = "hermod"
-version = "0.2.3"
+version = "0.2.4"
 description = "A fast In-Memory DBMS optimized with AI. Wah-pah."
 authors = ["Matteo Minardi <matteo.minardi2014@gmail.com"]
 keywords = ["DataBase", "In-Memory"]
