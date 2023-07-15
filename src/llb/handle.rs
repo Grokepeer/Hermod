@@ -48,7 +48,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
                 nxt = &query[4..];
             }
 
-            println!("Query: {:?}", query);
+            // println!("Query: {:?}", query);
 
             code = match &query[..3] {
                 "get" => getop(nxt, &store, &stream, &auth),
@@ -64,7 +64,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     }
 
     //Closing TCP connection
-    stream.write("\nDropping the connection to Hermod...".as_bytes()).unwrap_or(0);
+    stream.write("\nDropping the connection. Goodbye...".as_bytes()).unwrap_or(0);
     println!("Closed handle ID.{id} after {:.3?}", timestart.elapsed());
     stream.shutdown(Shutdown::Read).unwrap_or(());
 }
