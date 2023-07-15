@@ -89,16 +89,19 @@ pub fn delop(query: &str, store: &Arc<DataBase>, mut _stream: &TcpStream, auth: 
 
 //Given a DataTable this function writes to stream the number of elements present in it's data vector
 pub fn getlen(query: &str, store: &Arc<DataBase>, mut stream: &TcpStream) -> u16 {
-    match store.get_table(&query[..query.len() - 1]) {
-        Ok(table) => match table.table.read() {
-            Ok(vec) => {
-                stream.write(vec.len().to_string().as_bytes()).unwrap_or(0);
-                return 200
+    if query.len() > 1 {
+        match store.get_table(&query[..query.len() - 1]) {
+            Ok(table) => match table.table.read() {
+                Ok(vec) => {
+                    stream.write(vec.len().to_string().as_bytes()).unwrap_or(0);
+                    return 200
+                },
+                Err(_) => return 500
             },
-            Err(_) => return 500
-        },
-        Err(_) => return 404
-    };
+            Err(_) => return 404
+        };
+    }
+    return 400
 }
 
 //Returns all the tables in the DB in a list
