@@ -18,7 +18,13 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let mut query = String::from("");   //Get DEL_TOKEN
     let auth = match buffer.read_line(&mut query) {
         Err(_) => false,
-        _ => pkg.deltoken == query[6..query.len() - 1]  //Checks if client DEL_TOKEN matches the Pkg DEL_TOKEN
+        _ => {
+            if query.len() > 6 {
+                pkg.deltoken == query[6..query.len() - 1]  //Checks if client DEL_TOKEN matches the Pkg DEL_TOKEN
+            } else {
+                false
+            }
+        }
     };
 
     //Connection established, send confirmation to the Client
