@@ -35,7 +35,7 @@ Once the service is started and printed "Waiting on port..." the DB is ready to 
 ## API v0.3.0
 To access Hermod API the Client needs to establish a TCP connection to Hermod on port 2088 and send:   
 ```
-auth: "token"
+auth: [token]
 ```
 followed by the "\n" newline character (UTF8: 0x0a).  
 With the right token to be authenticated, or none if no authentication is needed or available. 
