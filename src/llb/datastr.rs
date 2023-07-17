@@ -13,7 +13,7 @@ pub struct PkgData {
 
 //Data structure used in the DB, points to another space in the heap that contains all data paired with the key in a String
 pub struct KeyData {
-    pub key: [u8; 20],
+    pub key: [u8; 32],
     pub data: RwLock<String>
 }
 
@@ -177,7 +177,7 @@ impl DataTable {
     //This function creates a record in the table that it was called upon
     //Returns 0 if the operation was successful, 1 if the record already existed, 2 if the record existed but was overridden, -1 if the function couldn't complete properly
     pub fn create_record(&self, recordkey: &str, recordata: &str, dataoverride: &bool) -> i8 {
-        let mut byteskey = [0u8; 20];
+        let mut byteskey = [0u8; 32];
         for i in 0..recordkey.len() {
             byteskey[i as usize] = recordkey.as_bytes()[i as usize];
         }
@@ -246,7 +246,7 @@ impl DataTable {
 }
 
 //Compares a slice with a fixed-sized array
-fn compare(slice: &[u8], array: &[u8; 20]) -> bool {
+fn compare(slice: &[u8], array: &[u8; 32]) -> bool {
     for i in 0..slice.len() {
         if slice[i] != array[i] {
             return false

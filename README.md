@@ -152,7 +152,7 @@ Gettab is a command in the suite of the Sup-er user that deletes an existing tab
 
 #### Notes:  
 - All requests to the Host must terminate with the UTF8 character 0x4 and all responses from the Host will terminate with the UTF8 character 0x4.
-- The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces.
+- The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces and can be at maximum 32 characters long (256 bit).
 - *Tablename* is a unique ID for each table, it cannot contain spaces.
 
 ### Response formatting:  
