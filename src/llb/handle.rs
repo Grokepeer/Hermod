@@ -16,7 +16,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
     let mut query = String::from("");   //Get DEL_TOKEN
-    let auth = match buffer.read_line(&mut query) {
+    let auth = match buffer.read_until(0x4, &mut query) {
         Err(_) => false,
         _ => {
             if query.len() > 6 {
