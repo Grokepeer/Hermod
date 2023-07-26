@@ -15,10 +15,11 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     let timestart = Instant::now();
     let mut buffer = BufReader::new(stream.try_clone().unwrap());
 
-    let mut query = String::from("");   //Get DEL_TOKEN
-    let auth = match buffer.read_until(0x4, &mut query) {
+    let mut bytes: Vec<u8> = Vec::new();    //Get DEL_TOKEN
+    let auth = match buffer.read_until(0x4, &mut bytes) {
         Err(_) => false,
         _ => {
+            let query = String::from_utf8(bytes).unwrap();
             if query.len() > 6 {
                 pkg.deltoken == query[6..query.len() - 1]  //Checks if client DEL_TOKEN matches the Pkg DEL_TOKEN
             } else {
