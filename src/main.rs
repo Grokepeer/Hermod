@@ -1,5 +1,5 @@
 // HermodDB Host
-// Copyright(c) 2022-2023 Matteo Minardi <contact@ybdrink.com>
+// Copyright(c) 2022-2023 Matteo Minardi <grokepeer@gmail.com>
 // AGPL Licensed
 
 //Importing standard libraries
