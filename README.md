@@ -20,7 +20,7 @@ Example of docker-compose.yaml
 ```
 services:
   hermod:
-    image: grokepeer/hermod:0.2.3
+    image: grokepeer/hermod:0.2.4
     ports:
       - 2088:2088
     environment:
