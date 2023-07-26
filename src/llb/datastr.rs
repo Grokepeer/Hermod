@@ -198,7 +198,7 @@ impl DataTable {
                     }
                 }
             },
-            (1, _x) => { //If the record exists but data-override is enabled it will delete the record and create a new one
+            (1, _x) => { //If the record exists but data-override is enabled it will change the data in the record already present in the db
                 if *dataoverride {
                     match self.table.read() {
                         Ok(table) => {
