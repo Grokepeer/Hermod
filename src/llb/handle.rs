@@ -29,17 +29,19 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
     };
 
     //Connection established, send confirmation to the Client
-    stream.write(format!("Hermod - Connection established (v{}, v{}, {})", pkg.pkgv, pkg.apiv, if auth { "Auth" } else { "noAuth" }).as_bytes()).unwrap();
+    stream.write(format!("Hermod - Connection established (v{}, v{}, {})\u{4}", pkg.pkgv, pkg.apiv, if auth { "Auth" } else { "noAuth" }).as_bytes()).unwrap();
     println!("Started handle ID.{id} in {:.3?}", timestart.elapsed());
 
     //Starts CLI loop
     loop {
+        println!("About to read...");
         let mut bytes: Vec<u8> = Vec::new();
         match buffer.read_until(0x4, &mut bytes) {    //Read line from the TCP buffer
             Err(_) => break,
             _ => {}
         };
         let query = String::from_utf8(bytes).unwrap();
+        println!("Read!");
 
         //Starts the query
         let chrono = Instant::now();
@@ -67,7 +69,7 @@ pub fn handle(mut stream: TcpStream, id: u8, store: Arc<DataBase>, pkg: Arc<PkgD
             };
         }
 
-        stream.write(format!("{}{:12?}{}{:3?}{}", "{", chrono.elapsed().as_nanos(), " ", code, "}\u{17}").as_bytes()).unwrap_or(0);
+        stream.write(format!("{}{:12?}{}{:3?}{}", "{", chrono.elapsed().as_nanos(), " ", code, "}\u{4}").as_bytes()).unwrap_or(0);
     }
 
     //Closing TCP connection

@@ -37,7 +37,7 @@ To access Hermod API the Client needs to establish a TCP connection to Hermod on
 ```
 auth: [token]
 ```
-followed by the \u4 end of transmission character (UTF8: 0x4).  
+followed by the UTF8 0x4 control character.  
 With the right token to be authenticated, or none if no authentication is needed or available. 
 Once the connection is established successfully the host will send:  
 ```
@@ -151,7 +151,7 @@ Gettab is a command in the suite of the Sup-er user that deletes an existing tab
 - 500 generic host error
 
 #### Notes:  
-- All requests to the Host must terminate with the UTF8 character 0x4 while all responses from the Host will terminate with the UTF8 character 0x17 (see [Response formatting](#Response-formatting:)).
+- All requests to the Host must terminate with the UTF8 character 0x4 while all responses from the Host will terminate with the UTF8 character 0x11 (see [Response formatting](#Response-formatting:)).
 - The *Data-Key* is a unique alphanumerical identification key for the each block of data stored in the DB, it cannot contain spaces and can be at maximum 32 characters long (256 bit).
 - *Tablename* is a unique ID for each table, it cannot contain spaces.
 
@@ -161,10 +161,10 @@ Gettab is a command in the suite of the Sup-er user that deletes an existing tab
 ```
 
 #### Notes:  
-- \[response-data] is possibly sent in a different stream from the {tail} so the client must expect multiple streams dependently on the request and the response and different streams can be separated by \u4 control characters so a response from the Host should be considered complete only once the \u17 character is received.
+- \[response-data] is possibly sent in a different stream from the {tail} so the client must expect multiple streams dependently on the request and the response and different streams can be separated by 0x4 control characters so a response from the Host should be considered complete only once the 0x11 character is received.
 - *x* is the query execution time in nano seconds, reported as a 3 to 12 digits number. 
 - *z* is an HTTP response code (200, 400, 404, 500...) that indicates the successfulness of the query server-side.
-- Every request always terminates with a UTF8 character 0x17 ("\u17").
+- Every request always terminates with a UTF8 character 0x11.
 
 ## ANN details
 
